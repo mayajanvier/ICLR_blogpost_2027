@@ -226,6 +226,9 @@ $$
 $$
 They prove that the manifold $\mathcal{M}$ is asymptotically Lyapunov-stable in the SNODE under certain constraints for the stabilization matrix $S$, which they choose to be the Moore-Penrose pseudoinverse of the Jacobian of $g$ at $\hat z$, $G^+=J_g^T(J_g J_g^T)^{-1}$, with $J_g$ the Jacobian matrix of $g$. 
 
+
+**A little training challenge** The constraint has discontinuities due to arctan, so we have to use torch.remainder to ensure it is zero modulo 2pi. (dvp more + figure): this is what we use during training. For testing, a more rigourous metric can be defined: we compute an unwrapped angle that is continuous and avoid the jumps due to the arctan. 
+
 We train several models with $\gamma \in \{0.1,0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 2.0\}$ and choose the model with the best final training loss: $\gamma_{opt}=0.4$. 
 
 {% include figure.liquid path="assets/img/2027-physics-constrained/traj_gt_node_snode.png" class="img-fluid rounded" caption="Ground truth, neural ODE and Stabilized NODE trajectories from the same initial points." %}
@@ -260,4 +263,6 @@ We observe that the model with the constraint is now very good at transporting t
 <span class="todo">TODO Regarder ce que fait la projection a chaque etape de rollout sur un gif ?</span>
 
 ## Conclusion
+
+- PNODE: doing the full projection, although more expensive, could ensure the respect of the algebraic constraint more strictly than SNODE
 
