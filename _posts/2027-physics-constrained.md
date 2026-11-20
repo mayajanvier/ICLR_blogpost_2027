@@ -116,14 +116,14 @@ We track the residual $$\lVert g(x^k) \rVert$$ to measure how well the constrain
 <span class="todo">TODO ecrire les cellules DPS, daisy, daps, et thermalizer et refiner ? (mais y a plus de contrainte physique ca va embrouiller je pense)
 Verifier ce que j'ai ecris pour constrained sampling j'ai lu les papiers a moittie</span>
 
-| Method | Loop index $$k$$ | $$F_\theta$$ learns | Correction $$\mathcal{P}_{\psi,k}$$ | Constraint enforced on |
+| Method | Loop index $$k$$ | $$f_\theta$$ learns | Correction $$\mathcal{P}_{\psi,k}$$ | Constraint enforced on |
 |---|---|---|---|---|
-| <span class="dyn"></span>Neural ODE (baseline) | physical time | vector field $$f$$ | none, $$\mathrm{Id}$$ | – |
-| <span class="dyn"></span>SNODE <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> | physical time | vector field $$f$$ | adds a stabilization  term to $f_{\theta}$  $$-\gamma\, G(x)^{+} g(x)$$ where $$G$$ is the Jacobian of $$g$$, pulls the state back to $$\mathcal{C}$$ | every $$x_n$$, asymptotically |
-| <span class="dyn"></span>PNODE <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite> | physical time | vector field $$f$$ |  |  |
-| <span class="gen"></span>GenCast <d-cite key="price2024gencastdiffusionbasedensembleforecasting"></d-cite>, AR conditional diffusion <d-cite key="kohl2024benchmarkingautoregressiveconditionaldiffusion"></d-cite> | physical time + inner sampling loop | conditional score of $$p(x_{t+\Delta_t} \mid x_t)$$ | none, sampler only |–|
-| <span class="gen"></span>Constrained Sampling (primal-dual) <d-cite key="chamon2025constrainedsamplingprimalduallangevin"></d-cite> | sampling time |learns full trajectories distributioions | Takes langevin step (diffusion sampling) with a penalty $$\lambda^\top g$$ solved with primal/dual formulation | the generated distribution follows the constraint in expectation $$\mathbb{E}[g(x)] = 0$$ |
-| <span class="gen"></span>Constrained Sampling (split) <d-cite key="blanke2026strictlyconstrainedgenerativemodeling"></d-cite> | sampling time | score | variable splitting: introduces a variable to alternates a sampling step and a projection onto $$\mathcal{C}$$ | final sample (exact constraint ?) |
+| <span class="dyn"></span>Neural ODE (baseline) | physical time | vector field $$f$$ | None | – |
+| <span class="dyn"></span>Stabilized NODE (SNODE) <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> | physical time | vector field $f$ | Stabilized Neural Differential Equation (SNDE): $f_{\theta}-\gamma\, G(x)^{+} g(x)$ where $G$ is the Jacobian of $g$, pulls the state back to $\mathcal{C}$. | Every $x_n$, $\mathcal{C}$ is asymptotically stable in the SNDE equation. |
+| <span class="dyn"></span>Projected NODE (PNODE) <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite> | physical time | vector field $f$ | Projection onto $\mathcal{C}$ using Newton's method with a fixed Jacobian. SNODE as a special case of PNODE with a single step. | Every $x_n$, full projection onto $\mathcal{C}$ at each step.  |
+| <span class="gen"></span>GenCast <d-cite key="price2024gencastdiffusionbasedensembleforecasting"></d-cite>, AR conditional diffusion <d-cite key="kohl2024benchmarkingautoregressiveconditionaldiffusion"></d-cite> | physical time + inner sampling loop | conditional score of $p(x_{t+\Delta_t} \mid x_t)$ | None |–|
+| <span class="gen"></span>Constrained Sampling (primal-dual) <d-cite key="chamon2025constrainedsamplingprimalduallangevin"></d-cite> | sampling time |full trajectory distribution | Takes langevin step (diffusion sampling) with a penalty $\lambda^\top g$ solved with primal/dual formulation. | the generated distribution follows the constraint in expectation $\mathbb{E}[g(x)] = 0$. |
+| <span class="gen"></span>Constrained Sampling (split) <d-cite key="blanke2026strictlyconstrainedgenerativemodeling"></d-cite> | sampling time | score | Variable splitting: introduces a variable to alternates a sampling step and a projection onto $\mathcal{C}$. | Final sample (exact constraint ?) |
 | <span class="gen"></span>DPS <d-cite key="chung2024diffusionposteriorsamplinggeneral"></d-cite> |  |  |  |  |
 | <span class="gen"></span>DAPS <d-cite key="Zhang_2025"></d-cite> | |  | |  |
 | <span class="gen"></span>DAISI <d-cite key="andrae2026daisidataassimilationinverse"></d-cite> |  |  |  | |
@@ -160,7 +160,7 @@ r(t) = 1 + (r_0 - 1)\,e^{-t},
 \theta(t) = \theta_0 + \alpha \log r_0 - \alpha \log\bigl(1 + (r_0 - 1)e^{-t}\bigr).
 $$
 
-{% include figure.liquid path="assets/img/2027-04-27-physic-constrained/rockets_gt.gif" class="img-fluid rounded" caption="Rockets landing on the circle along the true trajectories." %}
+{% include figure.liquid path="assets/img/2027-physics-constrained/rockets_gt.gif" class="img-fluid rounded" caption="Rockets landing on the circle along the true trajectories." %}
 
 ### The two constraints
 <span class="todo">est ce que ca va pas embrouiller d'evoquer les 2 contraintes. on part sur la contrainte a chaque pas de temps?</span>
@@ -169,7 +169,7 @@ $$
 
 With three classes of initial angle $$\theta_0 \in \{0.3\pi, 0.8\pi, 1.5\pi\}$$ and $$r_0 \sim \mathrm{LogNormal}(0, \sigma^2)$$, $$\sigma = 0.15$$, the landing angles are exactly Gaussian, $$\theta_\infty \sim \mathcal N(\theta_0, (\alpha\sigma)^2)$$:
 
-{% include figure.liquid path="assets/img/2027-04-27-physic-constrained/landing_angles_gt.png" class="img-fluid rounded" caption="Final states: landing points on the unit circle (left) and their angle distribution per class (right)." %}
+{% include figure.liquid path="assets/img/2027-physics-constrained/landing_angles_gt.png" class="img-fluid rounded" caption="Final states: landing points on the unit circle (left) and their angle distribution per class (right)." %}
 
 ## Simulating the spiral landing system
 
@@ -181,11 +181,11 @@ We show the trajectories generated by these models:
 
 <span class="todo">TODO je pense que le fait que flow matching montrent des trajectoires rectilignes c'est un peu attendu et je me demande toujours si ca fait sens de comparer les 2 trajectoires generes, mais bon ca peut etre par curiosite aussi. Peut etre ca vaut le coup ici de mettre le FM qui apprend aussi la trajectoire entiere ?</span>
 
-{% include figure.liquid path="assets/img/2027-04-27-physic-constrained/traj_gt_node_fm.gif" class="img-fluid rounded" caption="Ground truth, neural ODE and flow matching from the same initial points." %}
+{% include figure.liquid path="assets/img/2027-physics-constrained/traj_gt_node_fm.gif" class="img-fluid rounded" caption="Ground truth, neural ODE and flow matching from the same initial points." %}
 
 **Landing angles.** Starting from three classes of initial angle $$\theta_0 \in \{0.3\pi, 0.8\pi, 1.5\pi\}$$ with $$r_0 \sim \mathrm{LogNormal}(0, 0.15^2)$$, the ground truth spreads each class into $$\mathcal N(\theta_0, (\alpha\sigma)^2)$$ on the circle. We compare the landing-angle distributions of the three models (1-Wasserstein distance to the ground truth).
 
-{% include figure.liquid path="assets/img/2027-04-27-physic-constrained/landing_angles_models.png" class="img-fluid rounded" caption="Angle distributions at the start (dashed lines: $\theta_0$) and at landing, per class. On the learned models' panels, the ground-truth landing histogram is outlined." %}
+{% include figure.liquid path="assets/img/2027-physics-constrained/landing_angles_models.png" class="img-fluid rounded" caption="Angle distributions at the start (dashed lines: $\theta_0$) and at landing, per class. On the learned models' panels, the ground-truth landing histogram is outlined." %}
 
 
 ### Imposing the constraints on both families
