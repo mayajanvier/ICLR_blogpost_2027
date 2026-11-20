@@ -13,7 +13,7 @@ authors:
   - name: Anonymous
 
 # must be the exact same name as your blogpost
-bibliography: 2027-04-27-physic-constrained.bib
+bibliography: 2027-physics-constrained.bib 
 
 toc:
   - name: Introduction
