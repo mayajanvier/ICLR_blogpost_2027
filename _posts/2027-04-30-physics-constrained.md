@@ -34,6 +34,10 @@ _styles: |
   /* TODO markers (remove before submission) */
   .todo { color:#c2410c; background:rgba(234,88,12,.12); border:1px solid rgba(234,88,12,.45); border-radius:4px; padding:0 .35em; font-weight:600; font-size:.9em; }
   html[data-theme="dark"] .todo { color:#fb923c; background:rgba(251,146,60,.14); }
+  /* Pink highlight box */
+  .pinkbox { background:#fdf2f8; border:1px solid #f9a8d4; border-left:5px solid #ec4899; border-radius:6px; padding:.9em 1.2em; margin:1.2em 0; }
+  .pinkbox ul { margin:.4em 0 0; }
+  html[data-theme="dark"] .pinkbox { background:rgba(236,72,153,.12); border-color:rgba(236,72,153,.5); border-left-color:#ec4899; }
 
   /* algorithm box */
   .algo { margin:1.4rem 0; padding:.4rem 1.2rem; border-left:4px solid #2b7bba; background:rgba(43,123,186,.07); border-radius:0 10px 10px 0; }
@@ -52,14 +56,25 @@ _styles: |
   d-article tr:has(.gen) td { background:var(--gen-bg); }
   d-article tr:has(.dyn) td:first-child { border-left:4px solid var(--dyn); }
   d-article tr:has(.gen) td:first-child { border-left:4px solid var(--gen); }
+  /* inline method names in family colour */
+  .c-dyn { color:var(--dyn); font-weight:600; }
+  .c-gen { color:var(--gen); font-weight:600; }
 ---
 
 <span class="todo">DISCLAIMER: toutes les métriques temporelles sont calculées sur $t_{gif}$ qu'il va falloir unifier entre SNODE/FM pour Blandine et pour pouvoir dire des choses sur nos méthodes</span>
 
 ## 1. Enforcing physical constraints, a task shared between two communities
-In the world of physics modelisation, data-driven approaches represent cheap alternatives to classical numerical modelling, ranging from **Neural Ordinary Differential Equations (NODE)**, that learn the dynamics from trajectory points, to **generative methods**, that simulate trajectories based on a learned distribution of states. (TODO: mettre citations je sais pas comment) As many physical systems present continuous constraints called **algebraic constraints** ,i.e., that is respected continuously along any trajectory (for example conservation laws) or **final constraints** that should be respected at the end of the simulation (for control purposes), many methods have been developped to enforce these constraints on the learnt dynamics or distributions, in the hope of stabilizing or improving the model's simulations.
+In the world of physics modelisation, data-driven approaches represent cheap alternatives to classical numerical modelling, ranging from **Neural Ordinary Differential Equations (NODE)**, that learn the dynamics from trajectory points, to **generative methods**, that simulate trajectories based on a learned distribution of states.<d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> (TODO: mettre citations je sais pas comment) As many physical systems present continuous constraints called **algebraic constraints** ,i.e., that is respected continuously along any trajectory (for example conservation laws) or **final constraints** that should be respected at the end of the simulation (for control purposes), many methods have been developped to enforce these constraints on the learnt dynamics or distributions, in the hope of stabilizing or improving the model's simulations.
 
-Although dynamics-learning and generative methods to enforce physical constraints appear different at first, they do not fundamentally differ and can be understood under a common **prediction-projection** framework that we will present here. We gather several of these approches and show the efficiency on selected representant of each, on a system presenting both algebraic and final constraints. 
+Although dynamics-learning and generative methods to enforce physical constraints appear different at first, they do not fundamentally differ and can be understood under a common **prediction-projection** framework that we will present here. 
+
+<div class="pinkbox">
+  <strong>The aim of the blog is:</strong>
+  <ul>
+    <li>to gather dynamics-learning and generative approaches</li>
+    <li>study the efficiency on selected representant of each, on a system presenting both algebraic and final constraints.</li>
+  </ul>
+</div>
 
 ### Two communities learning to simulate dynamics...
 
@@ -113,8 +128,8 @@ We track the residual $\lVert g(x^k) \rVert$ to measure how well the constraint 
 **Be careful ! The index $k$ doesn't have the same meaning for both families :** 
 
 - **Dynamics-learning:** $k$ is the physical time, $x^k = x_k$ and $h_k = \Delta t$. Every integration step generates a physical state, so correcting every iterate enforces the constraint **along the trajectory**.
-- **Generative:** in generative models $k$ represents the sampling time that goes from noise  $x^0 \sim \mathcal{N}(0, I)$ to a sample $x^K$. The intermediate states of the integration are noisy and are not physical states so imposing the constraints of those states has no physical meaning. Only the final sample needs to satisfy the constraint. For this reason, some of the constrained samplers estimates the final state to impose the constraint on it, $\hat x(x^k) = \mathbb{E}[x^K \mid x^k]$ using tweedie's formula.
-- **Autoregressive generative models** For autoregresssive generative models there is an outer loop in physical time $n$ and, for each step, an inner sampling loop in $k$ that generates $x_{n+1}$ conditioned on $x_n$.
+- **Generative:** in generative models $k$ represents the sampling time that goes from noise  $x^0 \sim \mathcal{N}(0, I)$ to a sample $x^K$. The intermediate states of the integration are noisy and are not physical states so imposing the constraints of those states has no physical meaning. Only the final sample needs to satisfy the constraint. For this reason, some of the constrained samplers estimates the final state to impose the constraint on it, $\hat x(x^k) = \mathbb{E}[x^K \mid x^k]$ using Tweedie's formula.
+- **Autoregressive generative models** For autoregressive generative models there is an outer loop in physical time $n$ and, for each step, an inner sampling loop in $k$ that generates $x_{n+1}$ conditioned on $x_n$.
 
 **Taxonomy of the methods** 
 
@@ -135,7 +150,7 @@ Verifier ce que j'ai ecris pour constrained sampling j'ai lu les papiers a moitt
 | <span class="gen"></span>DAPS <d-cite key="Zhang_2025"></d-cite> | |  | |  |
 | <span class="gen"></span>DAISI <d-cite key="andrae2026daisidataassimilationinverse"></d-cite> |  |  |  | |
 
-Among these methods, we further illustrate SNODE and Primal-Dual Constrained Sampling as we will use them as representants of respectively the dynamics-learning and generative methods in the experiments of this blog.
+Among these methods, we further illustrate <span class="c-dyn">SNODE</span> and <span class="c-gen">Primal-Dual Constrained Sampling</span> as we will use them as representants of respectively the  <span class="c-dyn">dynamics-learning</span> and generative methods in the experiments of this blog.
 <span class="todo">TODO faire dessins en plus du lien d'algo pour les méthodes qu'on utilise ensuite</span>.
 
 We will test both on a 2D ODE whose trajectories spiral onto the unit circle. This system presents both kinds of constraint, and we can measure them exactly: a quantity **conserved along every trajectory**, and a distribution of **final states** on the unit circle.
