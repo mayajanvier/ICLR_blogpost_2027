@@ -231,7 +231,7 @@ They prove that the manifold $\mathcal{M}$ is asymptotically Lyapunov-stable in 
 
 We train several models with $\gamma \in \{0.1,0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 2.0\}$ and choose the model with the best final training loss: $\gamma_{opt}=0.4$. 
 
-{% include figure.liquid path="assets/img/2027-04-30-physics-constrained/traj_gt_node_snode.png" class="img-fluid rounded" caption="Ground truth, neural ODE and Stabilized NODE trajectories from the same initial points." %}
+{% include figure.liquid path="assets/img/2027-04-30-physics-constrained/traj_gt_node_snode.gif" class="img-fluid rounded" caption="Ground truth, neural ODE and Stabilized NODE trajectories from the same initial points." %}
 
 On test trajectories, NODE and SNODE perform similarly, with respective MSE of 1.63e-2 and 1.82e-2. 
 
