@@ -38,10 +38,17 @@ _styles: |
   .pinkbox { background:#fdf2f8; border:1px solid #f9a8d4; border-left:5px solid #ec4899; border-radius:6px; padding:.9em 1.2em; margin:1.2em 0; }
   .pinkbox ul { margin:.4em 0 0; }
   html[data-theme="dark"] .pinkbox { background:rgba(236,72,153,.12); border-color:rgba(236,72,153,.5); border-left-color:#ec4899; }
+  .pk-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; margin-top:.6rem; }
+  @media (max-width:760px) { .pk-grid { grid-template-columns:1fr; } }
+  .pk-grid > div + div { border-left:1px dashed #f9a8d4; padding-left:1.2rem; }
+  @media (max-width:760px) { .pk-grid > div + div { border-left:none; padding-left:0; } }
+  .pk-grid .pk-title { margin:0 0 .3rem; }
+  .pk-grid ul { margin:0; padding-left:1.1rem; font-size:.92em; }
 
   /* algorithm box */
   .algo { margin:1.4rem 0; padding:.4rem 1.2rem; border-left:4px solid #2b7bba; background:rgba(43,123,186,.07); border-radius:0 10px 10px 0; }
   html[data-theme="dark"] .algo { background:rgba(90,162,220,.13); }
+  .algo .algo-note { margin:.6rem 0 .5rem; padding-top:.55rem; border-top:1px dashed rgba(43,123,186,.35); font-size:.88em; opacity:.85; }
 
   /* family colours: green = dynamics-learning, purple = generative */
   d-article { --dyn:#2e9e6a; --dyn-bg:#eaf6ef; --gen:#8e5cc4; --gen-bg:#f3edfa; }
@@ -52,6 +59,16 @@ _styles: |
   .fam-gen { border-color:var(--gen); background:var(--gen-bg); }
   .fam-dyn strong:first-child { color:var(--dyn); }
   .fam-gen strong:first-child { color:var(--gen); }
+  .fam-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1rem 0; }
+  @media (max-width:760px) { .fam-grid { grid-template-columns:1fr; } }
+  .fam-grid .fam { margin:0; font-size:.9em; }
+  .fam-grid .fam-title { margin:.2rem 0 .5rem; font-weight:700; font-size:1.05em; }
+  .fam-dyn .fam-title { color:var(--dyn); }
+  .fam-gen .fam-title { color:var(--gen); }
+  .fam-grid .fam-defs { margin:.4rem 0; padding-left:1.1rem; }
+  .fam-grid .fam-algo { margin:.6rem 0 .2rem; padding:.5rem .5rem .5rem 1.8rem; border-top:1px dashed currentColor; }
+  .fam-dyn .fam-algo { border-color:var(--dyn); }
+  .fam-gen .fam-algo { border-color:var(--gen); }
   d-article tr:has(.dyn) td { background:var(--dyn-bg); }
   d-article tr:has(.gen) td { background:var(--gen-bg); }
   d-article tr:has(.dyn) td:first-child { border-left:4px solid var(--dyn); }
@@ -60,71 +77,42 @@ _styles: |
   .c-dyn { color:var(--dyn); font-weight:600; }
   .c-gen { color:var(--gen); font-weight:600; }
 
-    /* Blue algorithm-style collapsible toggle */
-  d-article .dyn-toggle {
-    margin: 1.4rem 0;
-    border: 1px solid rgba(43,123,186,.45);
-    border-left: 4px solid #2b7bba;
-    border-radius: 0 10px 10px 0;
-    background: rgba(43,123,186,.07);
-    overflow: hidden;
-  }
+  /* collapsible callouts: .dyn-toggle (blue, default) and .dyn-toggle.warn (amber) */
+  d-article { --tg:#2b7bba; --tg-bg:rgba(43,123,186,.06); --tg-line:rgba(43,123,186,.28); }
+  d-article details.dyn-toggle.warn { --tg:#c2410c; --tg-bg:rgba(234,88,12,.06); --tg-line:rgba(234,88,12,.3); }
+  html[data-theme="dark"] d-article { --tg:#5aa2dc; --tg-bg:rgba(90,162,220,.10); --tg-line:rgba(90,162,220,.3); }
+  html[data-theme="dark"] d-article details.dyn-toggle.warn { --tg:#fb923c; --tg-bg:rgba(251,146,60,.10); --tg-line:rgba(251,146,60,.3); }
 
-  d-article .dyn-toggle summary {
-    padding: 14px 18px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #2b7bba;
-    list-style: none;
+  d-article details.dyn-toggle {
+    margin:1.6rem 0; background:var(--tg-bg);
+    border:1px solid var(--tg-line); border-left:4px solid var(--tg);
+    border-radius:0 10px 10px 0; overflow:hidden;
   }
+  d-article details.dyn-toggle > summary {
+    display:flex; align-items:center; gap:.8rem;
+    padding:.75rem 1rem; cursor:pointer; list-style:none;
+    font-size:.95rem; line-height:1.4; color:inherit;
+  }
+  d-article details.dyn-toggle > summary::-webkit-details-marker { display:none; }
+  d-article details.dyn-toggle > summary:hover { background:var(--tg-line); }
+  d-article details.dyn-toggle > summary strong { font-weight:500; }
+  d-article details.dyn-toggle .dyn-badge {
+    flex:0 0 auto; white-space:nowrap;
+    padding:.2rem .6rem; border:1.5px solid var(--tg); border-radius:999px;
+    color:var(--tg); background:transparent;
+    font-size:.68rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  }
+  d-article details.dyn-toggle .dyn-arrow {
+    flex:0 0 auto; margin-left:auto; color:var(--tg);
+    font-size:1rem; transition:transform .2s ease;
+  }
+  d-article details.dyn-toggle[open] .dyn-arrow { transform:rotate(45deg); }
+  d-article details.dyn-toggle .dyn-content {
+    padding:.4rem 1.1rem 1rem; border-top:1px solid var(--tg-line);
+  }
+  d-article details.dyn-toggle .dyn-content .fam ul { margin:0; padding-left:1.1rem; }
 
-  d-article .dyn-toggle summary::-webkit-details-marker {
-    display: none;
-  }
-
-  d-article .dyn-badge {
-    background: #2b7bba;
-    color: white;
-    padding: 3px 9px;
-    border-radius: 5px;
-    font-size: .7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-
-  d-article .dyn-arrow {
-    margin-left: auto;
-  }
-
-  d-article .dyn-content {
-    padding: 4px 18px 16px;
-    border-top: 1px solid rgba(43,123,186,.25);
-  }
-
-  d-article .table-responsive {
-    overflow-x: auto;
-    width: 100%;
-  }
-
-  html[data-theme="dark"] d-article .dyn-toggle {
-    background: rgba(90,162,220,.13);
-    border-color: rgba(90,162,220,.45);
-    border-left-color: #5aa2dc;
-  }
-
-  html[data-theme="dark"] d-article .dyn-toggle summary {
-    color: #5aa2dc;
-  }
-
-  html[data-theme="dark"] d-article .dyn-badge {
-    background: #5aa2dc;
-  }
-
-  html[data-theme="dark"] d-article .dyn-content {
-    border-top-color: rgba(90,162,220,.3);
-  }
+  d-article .table-responsive { overflow-x:auto; width:100%; }
 ---
 
 <span class="todo">DISCLAIMER: toutes les métriques temporelles sont calculées sur $t_{gif}$ qu'il va falloir unifier entre SNODE/FM pour Blandine et pour pouvoir dire des choses sur nos méthodes</span>
@@ -180,48 +168,86 @@ By separating trajectory simulation into a prediction or **learned forward step*
 
 **Algorithm: learned step + correction**
 
-**Input:** network $f_\theta$, correction operator $\mathcal{P}_{\psi,k}$, step sizes $h_k$, initial distribution $p_0$.
+**Input:** network $f_\theta$, correction operator $\mathcal{P}_{k}$, step sizes $h_k$, initial distribution $p_0$. 
 
 1. Sample $x^0 \sim p_0$.
 2. For $k = 0, \dots, K-1$:
    - learned forward step: $\tilde x^{k+1} = x^k + h_k\, f_\theta(x^k, k)$ (here Euler, could be another numerical or learned solver)
-   - correction: $x^{k+1} = \mathcal{P}_{\psi,k}\big(\tilde x^{k+1}\big)$
+   - correction: $x^{k+1} = \mathcal{P}_{k}\big(\tilde x^{k+1}\big)$
 3. Return the whole sequence $x^0, \dots, x^K$ (dynamics) or only $x^K$ (generative).
+
+<p class="algo-note"><em>Note:</em> the correction operator \(\mathcal{P}_k\) can be hand-designed (e.g. an exact projection onto \(\mathcal{C}\) or a gradient of the constraint) or learned by a neural network \(\mathcal{P}_{\psi,k}\) with parameters \(\psi\).</p>
+</div>
+
+<div class="fam-grid">
+
+<div class="fam fam-dyn">
+  <p class="fam-title">Constrained dynamics-learning </p>
+  <p><strong>\(k\) = physical time</strong>: \(x^k = x_k\), \(h_k = \Delta t\) is the solver time step. Every iterate is a physical state, so the constraint is enforced <em>along the trajectory</em>.</p>
+  <ul class="fam-defs">
+    <li>\(d\): state dimension</li>
+    <li>\(f_\theta : \mathbb{R}^d \to \mathbb{R}^d,\; x \mapsto f_\theta(x)\)</li>
+    <li>\(\mathcal{P}_{k} : \mathbb{R}^d \to \mathbb{R}^d\): correction operator of \(x\)</li>
+    <li>\(p_0 = \mathcal{N}(0, I_d)\): initial conditions</li>
+  </ul>
+  <ol class="fam-algo">
+    <li>Sample \(x^0 \sim p_0\).</li>
+    <li>For \(k = 0, \dots, K-1\):<br>
+      \(\tilde x^{k+1} = x^k + h_k\, f_\theta(x^k)\)<br>
+      \(x^{k+1} = \mathcal{P}_{k}(\tilde x^{k+1})\)</li>
+    <li>Return the trajectory \(x^0, \dots, x^K\).</li>
+  </ol>
+</div>
+
+<div class="fam fam-gen">
+  <p class="fam-title"> Constrained generative</p>
+  <p><strong>\(k\) = sampling time</strong>: \(h_k\) is the sampling time step, from noise \(X^0\) to a sample \(X^K\). Intermediate states are not physical, so only the <em>final sample</em> must satisfy the constraint.</p>
+  <ul class="fam-defs">
+    <li>\(X = [x_1, \dots, x_N] \in \mathbb{R}^{d \times N}\): a whole trajectory</li>
+    <li>\(f_\theta : \mathbb{R}^{d\times N} \to \mathbb{R}^{d\times N},\; X \mapsto f_\theta(X)\)</li>
+    <li>\(\mathcal{P}^N_{k}(X) = [\mathcal{P}_{k}(x_1), \dots, \mathcal{P}_{k}(x_N)]\)</li>
+    <li>\(p_0 = \mathcal{N}(0, I_{d\times N})\): noise</li>
+  </ul> 
+  <ol class="fam-algo">
+    <li>Sample \(X^0 \sim p_0\).</li>
+    <li>For \(k = 0, \dots, K-1\):<br>
+      \(\tilde X^{k+1} = X^k + h_k\, f_\theta(X^k, k)\)<br>
+      \(X^{k+1} = \mathcal{P}^N_{k}(\tilde X^{k+1})\)</li>
+    <li>Return only \(X^K\).</li>
+  </ol>
+</div>
+
+
 
 </div>
 
-<details class="dyn-toggle">
-  <summary>
-    <span class="dyn-badge">Be careful !</span>
-    <strong>The index \(k\) doesn't have the same meaning for both families.</strong>
-    <span class="dyn-arrow">＋</span>
-  </summary>
 
-  <div class="dyn-content" markdown="1">
-
-  <div class="fam fam-dyn" markdown="1">
-  - **Dynamics-learning:** $k$ is the physical time, $x^k=x_k$, and $h_k=\Delta t$. Every integration step generates a physical state, so correcting every iterate enforces the constraint **along the trajectory**.
+  If we specify the schedule of $P_{k}$, we retreive existing methods 
+  <div class="pk-grid">
+    <div>
+      <p class="pk-title c-dyn"><span class="c-dyn">Dynamics-learning</span></p>
+      <ul>
+        <li>\(\mathcal{P}_k = \mathcal{P}_{\text{closed form}}\), the exact projection onto \(\mathcal{C}\), if a closed form exists. <em>(PNODE)</em></li>
+        <li>\(\mathcal{P}_k(\tilde x) = \tilde x - \alpha_k \nabla g(\tilde x)\), a gradient step towards \(\mathcal{C}\). <em>(SNODE)</em></li>
+      </ul>
+    </div>
+    <div>
+      <p class="pk-title c-gen"><span class="c-gen"> Generative methods </span></p>
+      <ul>
+        <li>\(\mathcal{P}_k = \mathrm{Id}\) for \(k &lt; K\): no correction on the intermediate noisy states.</li>
+        <li>\(\mathcal{P}_k(\tilde x) = \tilde x - \alpha_k \nabla g(\tilde x)\), a gradient step towards \(\mathcal{C}\).</li>
+      </ul>
+    </div>
   </div>
 
-  <div class="fam fam-gen" markdown="1">
-  - **Generative:** $k$ represents the sampling time, evolving from noise $x^0\sim\mathcal{N}(0,I)$ to a sample $x^K$. Intermediate states are noisy and are not physical states, so imposing constraints on them has no physical meaning. Only the final sample needs to satisfy the constraint. Some constrained samplers therefore estimate the final state using Tweedie's formula:
-    $$
-    \hat{x}(x^k)=\mathbb{E}[x^K\mid x^k].
-    $$
-  </div>
+    
 
-  - **Autoregressive generative models:** There is an outer loop in physical time $n$ and an inner sampling loop in $k$, which generates $x_{n+1}$ conditioned on $x_n$.
 
-  </div>
-</details>
-
-We detail a representant of each family into this algorithm: <span class="c-dyn">SNODE</span> for the <span class="c-dyn">dynamics-learning</span> and <span class="c-gen">Primal-Dual Constrained Sampling</span> for the <span class="c-gen"> generative methods </span> in the experiments of this blog.
-<span class="todo">TODO faire dessins + algo pour ces methodes</span>.
 
 <details class="dyn-toggle">
   <summary>
-    <span class="dyn-badge">Taxonomy of methods</span>
-    <strong>We can explain other methods from both families under this framework by identifying the learned step and correction step of each.</strong>
+    <span class="dyn-badge">Taxonomy</span>
+    <strong> Identification of prediction and correction step of SOTA methods</strong>
     <span class="dyn-arrow">＋</span>
   </summary>
 
@@ -229,11 +255,11 @@ We detail a representant of each family into this algorithm: <span class="c-dyn"
 
 <span class="todo">TODO écrire les cellules DPS, daisy, daps, et thermalizer et refiner ? (mais y a plus de contrainte physique ça va embrouiller je pense). Vérifier ce que j'ai écrit pour constrained sampling, j'ai lu les papiers à moitié.</span>
 
-We report this analysis for various state-of-the-art methods in the following table.
+We report this analysis for various state-of-the-art methods in the following table. This taxonomy is non exhaustive, but gives examples for both families.
 
 <div class="table-responsive" markdown="1">
 
-| Method | Loop index \(k\) | \(f_\theta\) learns | Correction \(\mathcal{P}_{\psi,k}\) | Constraint enforced on |
+| Method | Loop index \(k\) | \(f_\theta\) learns | Correction \(\mathcal{P}_{k}\) | Constraint enforced on |
 |---|---|---|---|---|
 | <span class="dyn"></span>Neural ODE (baseline) | Physical time | Vector field \(f\) | None | – |
 | <span class="dyn"></span>Stabilized NODE (SNODE) <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> | Physical time | Vector field \(f\) | SNDE: \(f_\theta-\gamma G(x)^+g(x)\), where \(G^+\) is the Moore-Penrose pseudoinverse of the Jacobian of \(g\). | Every \(x_n\); \(\mathcal{C}\) is asymptotically stable. |
@@ -243,22 +269,22 @@ We report this analysis for various state-of-the-art methods in the following ta
 | <span class="gen"></span>Constrained Sampling (split) <d-cite key="blanke2026strictlyconstrainedgenerativemodeling"></d-cite> | Sampling time | Score | Variable splitting: alternates a sampling step and a projection onto \(\mathcal{C}\). | Final sample (exact constraint?) |
 | <span class="gen"></span>DPS <d-cite key="chung2024diffusionposteriorsamplinggeneral"></d-cite> | | | | |
 | <span class="gen"></span>DAPS <d-cite key="Zhang_2025"></d-cite> | | | | |
-| <span class="gen"></span>DAISI <d-cite key="andrae2026daisidataassimilationinverse"></d-cite> | | | | |
 
 </div>
 
   </div>
 </details>
 
-<div class="pinkbox">
-  In the blog we will test both SNODE and Constrained Flow Matching on a 2D ODE whose trajectories spiral onto the unit circle.
-  Since this system presents both kinds of constraint, and we can measure them exactly:
+
+
+ In the blog, we pick a representant of each family : SNODE and Primal dual constrained sampling. We will test both on a 2D ODE whose trajectories spiral onto the unit circle.
+ 
+  We analyse the conservation of those following constraints :
   <ul>
     <li> a quantity <strong>conserved along every trajectory</strong> </li>
     <li>a distribution of <strong>final states on the unit circle</strong> </li>
   </ul>
   by tracking the residual $\lVert g(x^k) \rVert$ to measure how well each constraint is respected.
-</div>
 
 ## Our playground: the spiral landing system and its constraints
 
@@ -290,20 +316,52 @@ r(t) = 1 + (r_0 - 1)\,e^{-t},
 \theta(t) = \theta_0 + \alpha \log r_0 - \alpha \log\bigl(1 + (r_0 - 1)e^{-t}\bigr).
 $$
 
-{% include figure.liquid path="assets/img/2027-04-30-physics-constrained/rockets_gt.gif" class="img-fluid rounded" caption="Rockets landing on the circle along the true trajectories." %}
 
-This system ressembles rockets landing onto the Earth, right ?
-
+<span class="todo">Reduce the size</span>
+{% include figure.liquid path="assets/img/2027-04-30-physics-constrained/rockets_gt.gif" class="img-fluid rounded" caption="This system ressembles rockets landing onto the Earth, right ?" %}
 ### The two constraints
-<span class="todo">est ce que ca va pas embrouiller d'evoquer les 2 contraintes. on part sur la contrainte a chaque pas de temps? -> je pense que ca peut être interessant de garder les 2 si on separe bien</span>
-- **Final constraint (attractor).** Every trajectory lands on the unit circle: $g(z) = \lVert z \rVert^2 - 1 = 0$ as $t \to \infty$. A start at $(r_0, \theta_0)$ lands at angle $\theta_\infty = \theta_0 + \alpha \log r_0$.
+
+
 - **Constraint along the trajectory (algebraic).** We have $\frac{d\theta}{dr}=\frac{-\alpha}{r}$, meaning $I(\theta, r)=\theta-\alpha \ln(r)$ is constant along a trajectory. In carthesian coordinates, it writes $I(x,y)=\arctan(y/x) + \alpha \ln(\sqrt{x^2+y^2})$ and we have the algebraic constraint $g(x,y)=I(x,y)-I(x_0,y_0)=0$.
+
+- **Final constraint (attractor).** Every trajectory lands on the unit circle: $g(z) = \lVert z \rVert^2 - 1 = 0$ as $t \to \infty$. A start at $(r_0, \theta_0)$ lands at angle $\theta_\infty = \theta_0 + \alpha \log r_0$.
 
 With three classes of initial angle $\theta_0 \in \{0.3\pi, 0.8\pi, 1.5\pi\}$ and $r_0 \sim \mathrm{LogNormal}(0, \sigma^2)$, $\sigma = 0.15$, the landing angles are exactly Gaussian, $\theta_\infty \sim \mathcal N(\theta_0, (\alpha\sigma)^2)$:
 
 {% include figure.liquid path="assets/img/2027-04-30-physics-constrained/landing_angles_gt.png" class="img-fluid rounded" caption="Final states: landing points on the unit circle (left) and their angle distribution per class (right)." %}
 
-## Simulating the spiral landing system without constraints
+## Simulating the spiral landing system
+
+### Without constraints 
+
+-> EMMA 
+3 figures : 
+
+GT, NODE, FM traj
+
+evaluation :
+Toggle : Contrainte along all trajectory
+Toggle : Contrainte landing angles
+
+### Guidance strategies during trajectory generation
+
+-> MAYA et BlANDINE
+
+3 figures : 
+
+GT, NODE, SNODE
+FM traj, FM traj + constraint guidance
+
+evaluation :
+Toggle : Contrainte along all trajectory
+Toggle : Contrainte landing angles
+
+
+Toggle : remarque when should we to apply projection during generative sampling
+
+- Closed form : when we have a closed form -> more straighforward to apply it at the end 
+- Gradient guidance : 
+
 
 We first simulate our system without any constraint, using NODE for the dynamics-learning methods and flow matching for the generative methods. 
 
@@ -391,3 +449,14 @@ We observe that the model with the constraint is now very good at transporting t
 
 - PNODE: doing the full projection, although more expensive, could ensure the respect of the algebraic constraint more strictly than SNODE
 
+
+We saw that these methods can be explained under the same framework but they are not originally designed for the same applications. 
+
+Bridging those approaches requires to play with the methods by predicting windows instead of states for  generative modeling. 
+
+
+In the end, integrating dynamics and sampling processes boils down to integrating equations. It's therefore not surprising that similar constraining methods have been developed in their respective litterature.
+
+Our blog provides a framework to make a parallel between them.
+
+Differences remain, depending on whether you need to generate distributions of trajectories, or need flexibility of the timestep of the trajectories. One may be better suited than the other.
