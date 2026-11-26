@@ -16,11 +16,11 @@ authors:
 bibliography:  2027-04-30-physics-constrained.bib 
 
 toc:
-  - name: Introduction
+  - name: Enforcing physical constraints, a task shared between two communities
     subsections:
-      - name: A common framework
-      - name: Taxonomy of the methods
-  - name: System and constraints
+      - name: Two communities learning to simulate dynamics…
+      - name: ... enforcing physical constraints under a common framework
+  - name: "Our playground: the spiral landing system and its constraints"
     subsections:
       - name: An ODE that spirals onto the circle
       - name: The two constraints
@@ -59,14 +59,80 @@ _styles: |
   /* inline method names in family colour */
   .c-dyn { color:var(--dyn); font-weight:600; }
   .c-gen { color:var(--gen); font-weight:600; }
+
+    /* Blue algorithm-style collapsible toggle */
+  d-article .dyn-toggle {
+    margin: 1.4rem 0;
+    border: 1px solid rgba(43,123,186,.45);
+    border-left: 4px solid #2b7bba;
+    border-radius: 0 10px 10px 0;
+    background: rgba(43,123,186,.07);
+    overflow: hidden;
+  }
+
+  d-article .dyn-toggle summary {
+    padding: 14px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #2b7bba;
+    list-style: none;
+  }
+
+  d-article .dyn-toggle summary::-webkit-details-marker {
+    display: none;
+  }
+
+  d-article .dyn-badge {
+    background: #2b7bba;
+    color: white;
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  d-article .dyn-arrow {
+    margin-left: auto;
+  }
+
+  d-article .dyn-content {
+    padding: 4px 18px 16px;
+    border-top: 1px solid rgba(43,123,186,.25);
+  }
+
+  d-article .table-responsive {
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  html[data-theme="dark"] d-article .dyn-toggle {
+    background: rgba(90,162,220,.13);
+    border-color: rgba(90,162,220,.45);
+    border-left-color: #5aa2dc;
+  }
+
+  html[data-theme="dark"] d-article .dyn-toggle summary {
+    color: #5aa2dc;
+  }
+
+  html[data-theme="dark"] d-article .dyn-badge {
+    background: #5aa2dc;
+  }
+
+  html[data-theme="dark"] d-article .dyn-content {
+    border-top-color: rgba(90,162,220,.3);
+  }
 ---
 
 <span class="todo">DISCLAIMER: toutes les métriques temporelles sont calculées sur $t_{gif}$ qu'il va falloir unifier entre SNODE/FM pour Blandine et pour pouvoir dire des choses sur nos méthodes</span>
 
-## 1. Enforcing physical constraints, a task shared between two communities
+## Enforcing physical constraints, a task shared between two communities
 In the world of physics modelisation, data-driven approaches represent cheap alternatives to classical numerical modelling, ranging from **Neural Ordinary Differential Equations (NODE)**, that learn the dynamics from trajectory points, to **generative methods**, that simulate trajectories based on a learned distribution of states.<d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> (TODO: mettre citations je sais pas comment) As many physical systems present continuous constraints called **algebraic constraints** ,i.e., that is respected continuously along any trajectory (for example conservation laws) or **final constraints** that should be respected at the end of the simulation (for control purposes), many methods have been developped to enforce these constraints on the learnt dynamics or distributions, in the hope of stabilizing or improving the model's simulations.
 
-Although dynamics-learning and generative methods to enforce physical constraints appear different at first, they do not fundamentally differ and can be understood under a common **prediction-projection** framework that we will present here. 
+Although dynamics-learning and generative methods to enforce physical constraints appear different at first, they do not fundamentally differ and can be understood under a common **prediction-correction** framework that we will present here. 
 
 <div class="pinkbox">
   <strong>The aim of the blog is:</strong>
@@ -123,39 +189,78 @@ By separating trajectory simulation into a prediction or **learned forward step*
 3. Return the whole sequence $x^0, \dots, x^K$ (dynamics) or only $x^K$ (generative).
 
 </div>
-We track the residual $\lVert g(x^k) \rVert$ to measure how well the constraint is respected.
 
-**Be careful ! The index $k$ doesn't have the same meaning for both families :** 
+<details class="dyn-toggle">
+  <summary>
+    <span class="dyn-badge">Be careful !</span>
+    <strong>The index \(k\) doesn't have the same meaning for both families.</strong>
+    <span class="dyn-arrow">＋</span>
+  </summary>
 
-- **Dynamics-learning:** $k$ is the physical time, $x^k = x_k$ and $h_k = \Delta t$. Every integration step generates a physical state, so correcting every iterate enforces the constraint **along the trajectory**.
-- **Generative:** in generative models $k$ represents the sampling time that goes from noise  $x^0 \sim \mathcal{N}(0, I)$ to a sample $x^K$. The intermediate states of the integration are noisy and are not physical states so imposing the constraints of those states has no physical meaning. Only the final sample needs to satisfy the constraint. For this reason, some of the constrained samplers estimates the final state to impose the constraint on it, $\hat x(x^k) = \mathbb{E}[x^K \mid x^k]$ using Tweedie's formula.
-- **Autoregressive generative models** For autoregressive generative models there is an outer loop in physical time $n$ and, for each step, an inner sampling loop in $k$ that generates $x_{n+1}$ conditioned on $x_n$.
+  <div class="dyn-content" markdown="1">
 
-**Taxonomy of the methods** 
+  <div class="fam fam-dyn" markdown="1">
+  - **Dynamics-learning:** $k$ is the physical time, $x^k=x_k$, and $h_k=\Delta t$. Every integration step generates a physical state, so correcting every iterate enforces the constraint **along the trajectory**.
+  </div>
 
-We can then explain various methods from both families under this framework by identifying the learned step and correction step of each. We perform this analysis for various state-of-the-art methods in the following table.
+  <div class="fam fam-gen" markdown="1">
+  - **Generative:** $k$ represents the sampling time, evolving from noise $x^0\sim\mathcal{N}(0,I)$ to a sample $x^K$. Intermediate states are noisy and are not physical states, so imposing constraints on them has no physical meaning. Only the final sample needs to satisfy the constraint. Some constrained samplers therefore estimate the final state using Tweedie's formula:
+    $$
+    \hat{x}(x^k)=\mathbb{E}[x^K\mid x^k].
+    $$
+  </div>
 
-<span class="todo">TODO ecrire les cellules DPS, daisy, daps, et thermalizer et refiner ? (mais y a plus de contrainte physique ca va embrouiller je pense)
-Verifier ce que j'ai ecris pour constrained sampling j'ai lu les papiers a moittie</span>
+  - **Autoregressive generative models:** There is an outer loop in physical time $n$ and an inner sampling loop in $k$, which generates $x_{n+1}$ conditioned on $x_n$.
 
-| Method | Loop index $$k$$ | $$f_\theta$$ learns | Correction $$\mathcal{P}_{\psi,k}$$ | Constraint enforced on |
+  </div>
+</details>
+
+We detail a representant of each family into this algorithm: <span class="c-dyn">SNODE</span> for the <span class="c-dyn">dynamics-learning</span> and <span class="c-gen">Primal-Dual Constrained Sampling</span> for the <span class="c-gen"> generative methods </span> in the experiments of this blog.
+<span class="todo">TODO faire dessins + algo pour ces methodes</span>.
+
+<details class="dyn-toggle">
+  <summary>
+    <span class="dyn-badge">Taxonomy of methods</span>
+    <strong>We can explain other methods from both families under this framework by identifying the learned step and correction step of each.</strong>
+    <span class="dyn-arrow">＋</span>
+  </summary>
+
+  <div class="dyn-content" markdown="1">
+
+<span class="todo">TODO écrire les cellules DPS, daisy, daps, et thermalizer et refiner ? (mais y a plus de contrainte physique ça va embrouiller je pense). Vérifier ce que j'ai écrit pour constrained sampling, j'ai lu les papiers à moitié.</span>
+
+We report this analysis for various state-of-the-art methods in the following table.
+
+<div class="table-responsive" markdown="1">
+
+| Method | Loop index \(k\) | \(f_\theta\) learns | Correction \(\mathcal{P}_{\psi,k}\) | Constraint enforced on |
 |---|---|---|---|---|
-| <span class="dyn"></span>Neural ODE (baseline) | physical time | vector field $$f$$ | None | – |
-| <span class="dyn"></span>Stabilized NODE (SNODE) <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> | physical time | vector field $f$ | Stabilized Neural Differential Equation (SNDE): $f_{\theta}-\gamma\, G(x)^{+} g(x)$ where $G^{+}$ is the Moore-Penrose pseudoinverse of the Jacobian of $g$, nudges the state to $\mathcal{C}$. | Every $x_n$, $\mathcal{C}$ is asymptotically stable in the SNDE equation. |
-| <span class="dyn"></span>Projected NODE (PNODE) <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite> | physical time | vector field $f$ | Projection onto $\mathcal{C}$ using Newton's method with a fixed Jacobian. SNODE as a special case of PNODE with a single step. | Every $x_n$, full projection onto $\mathcal{C}$ at each step.  |
-| <span class="gen"></span>GenCast <d-cite key="price2024gencastdiffusionbasedensembleforecasting"></d-cite>, Auto Regressive conditional diffusion <d-cite key="kohl2024benchmarkingautoregressiveconditionaldiffusion"></d-cite> | physical time + inner sampling loop | conditional score of $p(x_{t+\Delta_t} \mid x_t)$ | None |–|
-| <span class="gen"></span>Constrained Sampling (primal-dual) <d-cite key="chamon2025constrainedsamplingprimalduallangevin"></d-cite> | sampling time |full trajectory distribution | Takes Langevin step (diffusion sampling) with a penalty $\lambda^\top g$ solved with primal/dual formulation. | Generated distribution follows the constraint in expectation $\mathbb{E}[g(x)] = 0$. |
-| <span class="gen"></span>Constrained Sampling (split) <d-cite key="blanke2026strictlyconstrainedgenerativemodeling"></d-cite> | sampling time | score | Variable splitting: introduces a variable to alternates a sampling step and a projection onto $\mathcal{C}$. | Final sample (exact constraint ?) |
-| <span class="gen"></span>DPS <d-cite key="chung2024diffusionposteriorsamplinggeneral"></d-cite> |  |  |  |  |
-| <span class="gen"></span>DAPS <d-cite key="Zhang_2025"></d-cite> | |  | |  |
-| <span class="gen"></span>DAISI <d-cite key="andrae2026daisidataassimilationinverse"></d-cite> |  |  |  | |
+| <span class="dyn"></span>Neural ODE (baseline) | Physical time | Vector field \(f\) | None | – |
+| <span class="dyn"></span>Stabilized NODE (SNODE) <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> | Physical time | Vector field \(f\) | SNDE: \(f_\theta-\gamma G(x)^+g(x)\), where \(G^+\) is the Moore-Penrose pseudoinverse of the Jacobian of \(g\). | Every \(x_n\); \(\mathcal{C}\) is asymptotically stable. |
+| <span class="dyn"></span>Projected NODE (PNODE) <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite> | Physical time | Vector field \(f\) | Projection onto \(\mathcal{C}\) using Newton's method with a fixed Jacobian. SNODE is a special case of PNODE with a single step. | Every \(x_n\); full projection onto \(\mathcal{C}\) at each step. |
+| <span class="gen"></span>GenCast <d-cite key="price2024gencastdiffusionbasedensembleforecasting"></d-cite>, Autoregressive conditional diffusion <d-cite key="kohl2024benchmarkingautoregressiveconditionaldiffusion"></d-cite> | Physical time + inner sampling loop | Conditional score of \(p(x_{t+\Delta_t}\mid x_t)\) | None | – |
+| <span class="gen"></span>Constrained Sampling (primal-dual) <d-cite key="chamon2025constrainedsamplingprimalduallangevin"></d-cite> | Sampling time | Full trajectory distribution | Langevin sampling step with penalty \(\lambda^\top g\), solved using a primal-dual formulation. | Generated distribution satisfies the constraint in expectation, \(\mathbb{E}[g(x)]=0\). |
+| <span class="gen"></span>Constrained Sampling (split) <d-cite key="blanke2026strictlyconstrainedgenerativemodeling"></d-cite> | Sampling time | Score | Variable splitting: alternates a sampling step and a projection onto \(\mathcal{C}\). | Final sample (exact constraint?) |
+| <span class="gen"></span>DPS <d-cite key="chung2024diffusionposteriorsamplinggeneral"></d-cite> | | | | |
+| <span class="gen"></span>DAPS <d-cite key="Zhang_2025"></d-cite> | | | | |
+| <span class="gen"></span>DAISI <d-cite key="andrae2026daisidataassimilationinverse"></d-cite> | | | | |
 
-Among these methods, we further illustrate <span class="c-dyn">SNODE</span> and <span class="c-gen">Primal-Dual Constrained Sampling</span> as we will use them as representants of respectively the  <span class="c-dyn">dynamics-learning</span> and generative methods in the experiments of this blog.
-<span class="todo">TODO faire dessins en plus du lien d'algo pour les méthodes qu'on utilise ensuite</span>.
+</div>
 
-We will test both on a 2D ODE whose trajectories spiral onto the unit circle. This system presents both kinds of constraint, and we can measure them exactly: a quantity **conserved along every trajectory**, and a distribution of **final states** on the unit circle.
+  </div>
+</details>
 
-## 2. Our playground: the spiral landing system and its constraints
+<div class="pinkbox">
+  In the blog we will test both SNODE and Constrained Flow Matching on a 2D ODE whose trajectories spiral onto the unit circle.
+  Since this system presents both kinds of constraint, and we can measure them exactly:
+  <ul>
+    <li> a quantity <strong>conserved along every trajectory</strong> </li>
+    <li>a distribution of <strong>final states on the unit circle</strong> </li>
+  </ul>
+  by tracking the residual $\lVert g(x^k) \rVert$ to measure how well each constraint is respected.
+</div>
+
+## Our playground: the spiral landing system and its constraints
 
 ### An ODE that spirals onto the circle
 
@@ -198,9 +303,7 @@ With three classes of initial angle $\theta_0 \in \{0.3\pi, 0.8\pi, 1.5\pi\}$ an
 
 {% include figure.liquid path="assets/img/2027-04-30-physics-constrained/landing_angles_gt.png" class="img-fluid rounded" caption="Final states: landing points on the unit circle (left) and their angle distribution per class (right)." %}
 
-## 3. Simulating the spiral landing system without constraints
-
-<span class="todo">TODO general: peut être qu'on peut être un blog avec du code a faire tourner pour plus de tutoriel, mais je sais pas si on aura le temps</span>
+## Simulating the spiral landing system without constraints
 
 We first simulate our system without any constraint, using NODE for the dynamics-learning methods and flow matching for the generative methods. 
 
@@ -230,7 +333,7 @@ We can also check if the final constraint is respected. Starting from three clas
 
 We observe that when no constraint is enforced during training, both dynamical learning and generative methods do not respect the landing constraint: NODE produces a distribution centered at the true mean but over-representing some angles, while flow matching generates shifted gaussians from the mean. This further motivates the usage of methods to enforce final constraint, that we will investigate lastly in section 5: landing on your feet. (TODO: mettre un lien vers la section). 
 
-## 4. Following the plan: enforcing the algebraic constraint along the trajectory
+## Following the plan: enforcing the algebraic constraint along the trajectory
 
 In this section, we will try to enforce $g(x_t,y_t)=0$ for every timestep of the predicted trajectory. 
 
@@ -242,9 +345,16 @@ $$
 They prove that the manifold $\mathcal{M}$ is asymptotically Lyapunov-stable in the SNODE under certain constraints for the stabilization matrix $S$, which they choose to be the Moore-Penrose pseudoinverse of the Jacobian of $g$ at $\hat z$, $G^+=J_g^T(J_g J_g^T)^{-1}$, with $J_g$ the Jacobian matrix of $g$. 
 
 
-**A little training challenge** The constraint has discontinuities due to arctan, so we have to use torch.remainder to ensure it is zero modulo 2pi. (dvp more + figure): this is what we use during training. For testing, a more rigourous metric can be defined: we compute an unwrapped angle that is continuous and avoid the jumps due to the arctan. 
+<details>
+<summary><strong>A little training challenge</strong></summary>
 
-We train several models with $\gamma \in \{0.1,0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 2.0\}$ and choose the model with the best final training loss: $\gamma_{opt}=0.4$. 
+The constraint has discontinuities due to `arctan`, so we have to use `torch.remainder` to ensure it is zero modulo \(2\pi\). (DVP more + figure): this is what we use during training.
+
+For testing, a more rigorous metric can be defined: we compute an unwrapped angle that is continuous and avoids the jumps due to `arctan`.
+
+We train several models with \(\gamma \in \{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 2.0\}\) and choose the model with the best final training loss: \(\gamma_{\mathrm{opt}}=0.4\).
+
+</details>
 
 {% include figure.liquid path="assets/img/2027-04-30-physics-constrained/traj_gt_node_snode.gif" class="img-fluid rounded" caption="Ground truth, neural ODE and Stabilized NODE trajectories from the same initial points." %}
 
@@ -261,7 +371,7 @@ Furthermore, SNODE is designed to be asymptotically stable for the manifold of c
 
 ### Flow matching learning all trajectory + constraint: Blandine
 
-## 5. Landing on your feet: enforcing the final constraint 
+## Landing on your feet: enforcing the final constraint 
 
 ### SNODE
 Although SNODE is a method to enforce the constraint along the whole trajectory, we can analyse its impact on the landing angle distribution. 
