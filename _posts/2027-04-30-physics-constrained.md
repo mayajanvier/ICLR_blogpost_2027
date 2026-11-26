@@ -76,6 +76,13 @@ _styles: |
   /* inline method names in family colour */
   .c-dyn { color:var(--dyn); font-weight:600; }
   .c-gen { color:var(--gen); font-weight:600; }
+  /* constraint colours: blue = along the trajectory, gold = landing angles */
+  d-article { --traj:#2563eb; --traj-bg:rgba(37,99,235,.06); --land:#a16207; --land-bg:rgba(202,138,4,.08); }
+  html[data-theme="dark"] d-article { --traj:#60a5fa; --traj-bg:rgba(96,165,250,.10); --land:#facc15; --land-bg:rgba(250,204,21,.09); }
+  .c-traj { color:var(--traj); font-weight:600; }
+  .c-land { color:var(--land); font-weight:600; }
+  d-article details.dyn-toggle.traj { --tg:var(--traj); --tg-bg:var(--traj-bg); --tg-line:rgba(37,99,235,.28); }
+  d-article details.dyn-toggle.land { --tg:var(--land); --tg-bg:var(--land-bg); --tg-line:rgba(202,138,4,.32); }
 
   /* collapsible callouts: .dyn-toggle (blue, default) and .dyn-toggle.warn (amber) */
   d-article { --tg:#2b7bba; --tg-bg:rgba(43,123,186,.06); --tg-line:rgba(43,123,186,.28); }
@@ -259,14 +266,14 @@ We report this analysis for various state-of-the-art methods in the following ta
 
 <div class="table-responsive" markdown="1">
 
-| Method | Loop index \(k\) | \(f_\theta\) learns | Correction \(\mathcal{P}_{k}\) | Constraint enforced on |
+| Method | Loop index $$k$$ | $$f_\theta$$ learns | Correction $$\mathcal{P}_{k}$$ | Constraint enforced on |
 |---|---|---|---|---|
-| <span class="dyn"></span>Neural ODE (baseline) | Physical time | Vector field \(f\) | None | – |
-| <span class="dyn"></span>Stabilized NODE (SNODE) <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> | Physical time | Vector field \(f\) | SNDE: \(f_\theta-\gamma G(x)^+g(x)\), where \(G^+\) is the Moore-Penrose pseudoinverse of the Jacobian of \(g\). | Every \(x_n\); \(\mathcal{C}\) is asymptotically stable. |
-| <span class="dyn"></span>Projected NODE (PNODE) <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite> | Physical time | Vector field \(f\) | Projection onto \(\mathcal{C}\) using Newton's method with a fixed Jacobian. SNODE is a special case of PNODE with a single step. | Every \(x_n\); full projection onto \(\mathcal{C}\) at each step. |
-| <span class="gen"></span>GenCast <d-cite key="price2024gencastdiffusionbasedensembleforecasting"></d-cite>, Autoregressive conditional diffusion <d-cite key="kohl2024benchmarkingautoregressiveconditionaldiffusion"></d-cite> | Physical time + inner sampling loop | Conditional score of \(p(x_{t+\Delta_t}\mid x_t)\) | None | – |
-| <span class="gen"></span>Constrained Sampling (primal-dual) <d-cite key="chamon2025constrainedsamplingprimalduallangevin"></d-cite> | Sampling time | Full trajectory distribution | Langevin sampling step with penalty \(\lambda^\top g\), solved using a primal-dual formulation. | Generated distribution satisfies the constraint in expectation, \(\mathbb{E}[g(x)]=0\). |
-| <span class="gen"></span>Constrained Sampling (split) <d-cite key="blanke2026strictlyconstrainedgenerativemodeling"></d-cite> | Sampling time | Score | Variable splitting: alternates a sampling step and a projection onto \(\mathcal{C}\). | Final sample (exact constraint?) |
+| <span class="dyn"></span>Neural ODE (baseline) | Physical time | Vector field $$f$$ | None | – |
+| <span class="dyn"></span>Stabilized NODE (SNODE) <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> | Physical time | Vector field $$f$$ | SNDE: $$f_\theta-\gamma G(x)^+g(x)$$, where $$G^+$$ is the Moore-Penrose pseudoinverse of the Jacobian of $$g$$. | Every $$x_n$$; $$\mathcal{C}$$ is asymptotically stable. |
+| <span class="dyn"></span>Projected NODE (PNODE) <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite> | Physical time | Vector field $$f$$ | Projection onto $$\mathcal{C}$$ using Newton's method with a fixed Jacobian. SNODE is a special case of PNODE with a single step. | Every $$x_n$$; full projection onto $$\mathcal{C}$$ at each step. |
+| <span class="gen"></span>GenCast <d-cite key="price2024gencastdiffusionbasedensembleforecasting"></d-cite>, Autoregressive conditional diffusion <d-cite key="kohl2024benchmarkingautoregressiveconditionaldiffusion"></d-cite> | Physical time + inner sampling loop | Conditional score of $$p(x_{t+\Delta_t}\mid x_t)$$ | None | – |
+| <span class="gen"></span>Constrained Sampling (primal-dual) <d-cite key="chamon2025constrainedsamplingprimalduallangevin"></d-cite> | Sampling time | Full trajectory distribution | Langevin sampling step with penalty $$\lambda^\top g$$, solved using a primal-dual formulation. | Generated distribution satisfies the constraint in expectation, $$\mathbb{E}[g(x)]=0$$. |
+| <span class="gen"></span>Constrained Sampling (split) <d-cite key="blanke2026strictlyconstrainedgenerativemodeling"></d-cite> | Sampling time | Score | Variable splitting: alternates a sampling step and a projection onto $$\mathcal{C}$$. | Final sample (exact constraint?) |
 | <span class="gen"></span>DPS <d-cite key="chung2024diffusionposteriorsamplinggeneral"></d-cite> | | | | |
 | <span class="gen"></span>DAPS <d-cite key="Zhang_2025"></d-cite> | | | | |
 
@@ -322,9 +329,9 @@ $$
 ### The two constraints
 
 
-- **Constraint along the trajectory (algebraic).** We have $\frac{d\theta}{dr}=\frac{-\alpha}{r}$, meaning $I(\theta, r)=\theta-\alpha \ln(r)$ is constant along a trajectory. In carthesian coordinates, it writes $I(x,y)=\arctan(y/x) + \alpha \ln(\sqrt{x^2+y^2})$ and we have the algebraic constraint $g(x,y)=I(x,y)-I(x_0,y_0)=0$.
+- <span class="c-traj">Constraint along the trajectory (algebraic).</span> We have $\frac{d\theta}{dr}=\frac{-\alpha}{r}$, meaning $I(\theta, r)=\theta-\alpha \ln(r)$ is constant along a trajectory. In carthesian coordinates, it writes $I(x,y)=\arctan(y/x) + \alpha \ln(\sqrt{x^2+y^2})$ and we have the algebraic constraint $g(x,y)=I(x,y)-I(x_0,y_0)=0$.
 
-- **Final constraint (attractor).** Every trajectory lands on the unit circle: $g(z) = \lVert z \rVert^2 - 1 = 0$ as $t \to \infty$. A start at $(r_0, \theta_0)$ lands at angle $\theta_\infty = \theta_0 + \alpha \log r_0$.
+- <span class="c-land">Final constraint: landing angles (attractor).</span> Every trajectory lands on the unit circle: $g(z) = \lVert z \rVert^2 - 1 = 0$ as $t \to \infty$. A start at $(r_0, \theta_0)$ lands at angle $\theta_\infty = \theta_0 + \alpha \log r_0$.
 
 With three classes of initial angle $\theta_0 \in \{0.3\pi, 0.8\pi, 1.5\pi\}$ and $r_0 \sim \mathrm{LogNormal}(0, \sigma^2)$, $\sigma = 0.15$, the landing angles are exactly Gaussian, $\theta_\infty \sim \mathcal N(\theta_0, (\alpha\sigma)^2)$:
 
@@ -332,50 +339,31 @@ With three classes of initial angle $\theta_0 \in \{0.3\pi, 0.8\pi, 1.5\pi\}$ an
 
 ## Simulating the spiral landing system
 
-### Without constraints 
+### Without constraints
 
--> EMMA 
-3 figures : 
-
-GT, NODE, FM traj
-
-evaluation :
-Toggle : Contrainte along all trajectory
-Toggle : Contrainte landing angles
-
-### Guidance strategies during trajectory generation
-
--> MAYA et BlANDINE
-
-3 figures : 
-
-GT, NODE, SNODE
-FM traj, FM traj + constraint guidance
-
-evaluation :
-Toggle : Contrainte along all trajectory
-Toggle : Contrainte landing angles
-
-
-Toggle : remarque when should we to apply projection during generative sampling
-
-- Closed form : when we have a closed form -> more straighforward to apply it at the end 
-- Gradient guidance : 
-
-
-We first simulate our system without any constraint, using NODE for the dynamics-learning methods and flow matching for the generative methods. 
-
+--> EMMA
 **Same start, three trajectories.** All models start from the same Gaussian initial points $z_0 \sim \mathcal N(0, I)$.
 We compare a Neural ODE that learns the $f_\theta$ and a flow matching model that learns the transport between starting point and final state distirbution.
 We show the trajectories generated by these models:
+We first simulate our system without any constraint, using NODE for the dynamics-learning methods and flow matching for the generative methods. 
 
-<span class="todo">TODO je pense que le fait que flow matching montrent des trajectoires rectilignes c'est un peu attendu et je me demande toujours si ca fait sens de comparer les 2 trajectoires generes, mais bon ca peut etre par curiosite aussi. Peut etre ca vaut le coup ici de mettre le FM qui apprend aussi la trajectoire entiere ? -> je suis d'accord faut rajouter les trajectoires de Blandine ici aussi en mode GT-NODE-FM-FM(traj)</span>
+<span class="todo">BLANDINE mettre le FM traj au lieu du FM autoregressif</span>
 
 {% include figure.liquid path="assets/img/2027-04-30-physics-constrained/traj_gt_node_fm.gif" class="img-fluid rounded" caption="Ground truth, neural ODE and flow matching from the same initial points." %}
 
 Qualitatively and quantitatively, the NODE trajectories are accurately reproducing the true ones (MSE on the test set: $1.63e-2$). <span class="todo">FM-traj ??</span> But do they also respect the different constraints we defined ? 
 
-### Algebraic constraint
+
+**Evaluation.**
+
+<details class="dyn-toggle traj">
+  <summary>
+    <span class="dyn-badge">Along the trajectory</span>
+    <strong> Are the models satisfying the alebraic constraint?</strong>
+    <span class="dyn-arrow">＋</span>
+  </summary>
+  <div class="dyn-content" markdown="1">
+
 We can check if these methods conserve $I(x,y)$ along the trajectories. 
 
 {% include figure.liquid path="assets/img/2027-04-30-physics-constrained/constraint_gt_node_fm.png" class="img-fluid rounded" caption="Evolution of the algebraic constraint along trajectories over time." %}
@@ -384,18 +372,36 @@ We observe that NODE is quite good at respecting the algebraic constraint. For t
 
 We will show how to enforce this constraint along trajectories in both dynamics-landing and generative setups, and compare them to these baselines in section 3: following the plan (TODO mettre lien section pour plus d'interactivité).
 
-### Landing angles
+
+  </div>
+</details>
+
+<details class="dyn-toggle land">
+  <summary>
+    <span class="dyn-badge">Landing angles</span>
+    <strong> Is the distribution of landing angles respected ?</strong>
+    <span class="dyn-arrow">＋</span>
+  </summary>
+  <div class="dyn-content" markdown="1">
+
 We can also check if the final constraint is respected. Starting from three classes of initial angle $\theta_0 \in \{0.3\pi, 0.8\pi, 1.5\pi\}$ with $r_0 \sim \mathrm{LogNormal}(0, 0.15^2)$, the ground truth spreads each class into $\mathcal N(\theta_0, (\alpha\sigma)^2)$ on the circle. We compare the landing-angle distributions of the three models (1-Wasserstein distance to the ground truth).
 
 {% include figure.liquid path="assets/img/2027-04-30-physics-constrained/landing_angles_models.png" class="img-fluid rounded" caption="Angle distributions at the start (dashed lines: $\theta_0$) and at landing, per class. On the learned models' panels, the ground-truth landing histogram is outlined." %}
 
 We observe that when no constraint is enforced during training, both dynamical learning and generative methods do not respect the landing constraint: NODE produces a distribution centered at the true mean but over-representing some angles, while flow matching generates shifted gaussians from the mean. This further motivates the usage of methods to enforce final constraint, that we will investigate lastly in section 5: landing on your feet. (TODO: mettre un lien vers la section). 
 
-## Following the plan: enforcing the algebraic constraint along the trajectory
+  </div>
+</details>
+
+### Guidance strategies during trajectory generation
+<span class="todo">-> MAYA et BlANDINE
+GT, NODE, SNODE
+FM traj, FM traj + constraint guidance</span>
+
 
 In this section, we will try to enforce $g(x_t,y_t)=0$ for every timestep of the predicted trajectory. 
 
-### SNODE
+#### SNODE
 The idea of SNODE is to directly modify the Neural ODE with a term that “nudges” back the trajectory to the manifold of algebraic constraint $\mathcal{M}=\{u, g(u)=0\}$: 
 $$
 \dot{\hat z} = f_\theta(\hat z) - \gamma S(\hat z )g(\hat z)
@@ -418,6 +424,18 @@ We train several models with \(\gamma \in \{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0
 
 On test trajectories, NODE and SNODE perform similarly, with respective MSE of 1.63e-2 and 1.82e-2. 
 
+**Evaluation.**
+
+<details class="dyn-toggle traj">
+  <summary>
+    <span class="dyn-badge">Along the trajectory</span>
+    <strong>Are the models satisfying the alebraic constraint?</strong>
+    <span class="dyn-arrow">＋</span>
+  </summary>
+  <div class="dyn-content" markdown="1">
+
+#### SNODE
+
 {% include figure.liquid path="assets/img/2027-04-30-physics-constrained/constraint_gt_node_snode.png" class="img-fluid rounded" caption="Algebraic constraint along the trajectories for the ground truth, neural ODE and SNODE." %}
 
 Looking at the algebraic constraint, SNODE seems to sometimes perturbate the initial trajectories, inducing some errors in the respect of the constraint for some. The $\gamma$ parameter is particularly sensitive to calibrate, as it requires 
@@ -426,24 +444,36 @@ $$\gamma \geq \frac{\Vert J_g(x)f_\theta(x)\Vert}{\lambda_0\Vert g(x)\Vert}$$
 with $\lambda_0$ the smallest eigenvalue of $J_g$ the Jacobian of the constraint $g$.
 
 Furthermore, SNODE is designed to be asymptotically stable for the manifold of constraint, meaning it is designed to prevent any divergences in the long term trajectories. Here the trajectories can be too short to observe the stabilization effect. This observation will be validated in section 5.  
+<span class="todo">TODO: FM + constraint blandine</span>
+  </div>
+</details>
 
-### Flow matching learning all trajectory + constraint: Blandine
+<details class="dyn-toggle land">
+  <summary>
+    <span class="dyn-badge">Landing angles</span>
+    <strong>Is the distribution of landing angles respected ?</strong>
+    <span class="dyn-arrow">＋</span>
+  </summary>
+  <div class="dyn-content" markdown="1">
 
-## Landing on your feet: enforcing the final constraint 
-
-### SNODE
+#### SNODE
 Although SNODE is a method to enforce the constraint along the whole trajectory, we can analyse its impact on the landing angle distribution. 
 
 {% include figure.liquid path="assets/img/2027-04-30-physics-constrained/landing_angles_gt_node_snode.png" class="img-fluid rounded" caption="Angle distributions at the start (dashed lines: $\theta_0$) and at landing, per class. On the learned models' panels, the ground-truth landing histogram is outlined." %}
 
 We observe that the model with the constraint is now very good at transporting the initial gaussian distribution of angles: even though SNODE can perturbate the trajectories, the manifold of the constraint remain asymptotically stable, that is to say the constraint is progressively pushed to $\mathcal{C}$. This is why the model is good when we look at the final angle, but can be less good during the trajectory (that are quite short here).
 
-### Flow matching learning all trajectory + constraint: Blandine
+
+<span class="todo">TODO: FM + constraint blandine</span>
+  </div>
+</details>
+
+**Remark: when should we apply the projection during generative sampling?**
+
+- **Closed form:** when we have a closed form, it is more straightforward to apply it at the end.
+- **Gradient guidance:** <span class="todo">TODO</span>
 
 
-<span class="todo">TODO Plot de g(^xt) a la  en fonction du temps de rollout pour les modeles.</span>
-
-<span class="todo">TODO Regarder ce que fait la projection a chaque etape de rollout sur un gif ?</span>
 
 ## Conclusion
 
