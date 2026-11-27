@@ -237,15 +237,15 @@ We now have a general view of how both families can enforce physical constraints
     <div>
       <p class="pk-title c-dyn"><span class="c-dyn">Dynamics-learning</span></p>
       <ul>
-        <li><strong>Projected NODE (PNODE)</strong> <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite>: \(\mathcal{P}_k = \mathcal{P}_{\mathcal{C}} \, \forall k \leq K \), the exact projection onto \(\mathcal{C}\) (closed form or solved iteratively) </li>
+        <li><strong>Projected NODE (PNODE)</strong> <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite>: \(\mathcal{P}_k = \mathcal{P}_{\mathcal{C}} \, \forall k \leq K \), the exact projection onto \(\mathcal{C}\) (closed form or solved iteratively). </li>
         <li><strong>Stabilized NODE (SNODE)</strong> <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite>: the correction operator directly modifies \(f_\theta\) into \(f_\theta - \gamma G^{+}g\)where $G^+$ is the Moore-Penrose pseudoinverse of the Jacobian of $g$. When the solver is Euler, it translates into the schedule \(\mathcal{P}_k(\tilde x) = \tilde x - \gamma h_k G^{+}(\tilde x)g(\tilde x)\). As described in <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite>, it corresponds to a single step of the full projection \(\mathcal{P}_\mathcal{C}\). </li>
       </ul>
     </div>
     <div>
       <p class="pk-title c-gen"><span class="c-gen"> Generative methods </span></p>
       <ul>
-        <li>\(\mathcal{P}_k = \mathrm{Id}\) for \(k &lt; K\): no correction on the intermediate noisy states, only on the final state.</li>
-        <li> <strong>Guided projection</strong> (TODO: mettre des refs): similarly to SNODE, the projection is guided via a gradient step towards \(\mathcal{C}\), i.e., \(\mathcal{P}_k(\tilde x) = \tilde x - \alpha_k \nabla g(\tilde x)\).</li>
+        <li><strong>Final state projection (TODO mettre refs):</strong> \(\mathcal{P}_k = \mathrm{Id}\) for \(k &lt; K\), and \(\mathcal{P}_K=\mathcal{P}_{\mathcal{C}}\), i.e., no correction on the intermediate noisy states, only on the final state.</li>
+        <li> <strong> Primal Dual Constrained Sampling</strong> <d-cite key="chamon2025constrainedsamplingprimalduallangevin"></d-cite> : similarly to SNODE, the projection is guided via a gradient step towards \(\mathcal{C}\), i.e., \(\mathcal{P}_k(\tilde x) = \tilde x - \alpha_k \nabla g(\tilde x)\).</li>
       </ul>
     </div>
   </div>
@@ -286,15 +286,7 @@ We report this analysis for various state-of-the-art methods in the following ta
 </details>
 
 
-
- In the blog, we pick a representant of each family : SNODE and Primal dual constrained sampling. We will test both on a 2D ODE whose trajectories spiral onto the unit circle.
- 
-  We analyse the conservation of those following constraints :
-  <ul>
-    <li> a quantity <strong>conserved along every trajectory</strong> </li>
-    <li>a distribution of <strong>final states on the unit circle</strong> </li>
-  </ul>
-  by tracking the residual $\lVert g(x^k) \rVert$ to measure how well each constraint is respected.
+ In the blog, we pick a representant of each family : <span class="c-dyn">SNODE</span> and <span class="c-gen">Primal Dual Constrained Sampling</span>. We will test both on a 2D ODE whose trajectories spiral onto the unit circle. Let's discover our playground in the next section...
 
 ## Our playground: the spiral landing system and its constraints
 
