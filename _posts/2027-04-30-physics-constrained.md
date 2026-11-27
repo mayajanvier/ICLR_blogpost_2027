@@ -285,7 +285,7 @@ We report this analysis for various state-of-the-art methods in the following ta
 </details>
 
 
- In the rest of this blog, we investigate a representant of each family : <span class="c-dyn">SNODE</span> and <span class="c-gen">Primal Dual Constrained Sampling</span>. We will test both on a 2D ODE whose trajectories spiral onto the unit circle. Let's discover our playground in the next section...
+ In the rest of this blog, we investigate a representant of each family: <span class="c-dyn">SNODE</span> and <span class="c-gen">Primal Dual Constrained Sampling</span>. We will test both on a 2D ODE whose trajectories spiral onto the unit circle. Let's discover our playground in the next section...
 
 ## Our playground: the spiral landing system and its constraints
 
