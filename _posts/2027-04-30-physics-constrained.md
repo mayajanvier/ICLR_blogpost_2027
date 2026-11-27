@@ -343,29 +343,29 @@ We first simulate our system without any constraint, using NODE for the dynamics
 
 <span class="todo">BLANDINE mettre le FM traj au lieu du FM autoregressif</span>
 
-{% include figure.liquid path="assets/img/2027-04-30-physics-constrained/traj_gt_node_fm.gif" class="img-fluid rounded" caption="Ground truth, neural ODE and flow matching from the same initial points." %}
+{% include figure.liquid path="assets/img/2027-04-30-physics-constrained/traj_gt_node_fmtraj.gif" class="img-fluid rounded" caption="Ground truth, neural ODE and flow matching trajectory simulation from the same initial points." %}
 
-Qualitatively and quantitatively, the NODE trajectories are accurately reproducing the true ones (MSE on the test set: $1.63e-2$). <span class="todo">FM-traj ??</span> But do they also respect the different constraints we defined ? 
+We can now visualize the simulation time distinction between the two methods: the ground truth (GT) and neural ODE trajectories advance the 2D state in the physical time (left and middle panels), while the trajectory flow matching (FM) iteratively refine a trajectory in the sample time (right panel).
 
+Qualitatively and quantitatively, the NODE trajectories are accurately reproducing the true ones (MSE on the test set: $1.63e-2$). <span class="todo">FM-traj ??</span> 
 
-**Evaluation.**
+**But do these methods also respect the different constraints we defined ?** 
 
 <details class="dyn-toggle traj">
   <summary>
     <span class="dyn-badge">Along the trajectory</span>
-    <strong> Are the models satisfying the alebraic constraint?</strong>
+    <strong> Are the models satisfying the algebraic constraint?</strong>
     <span class="dyn-arrow">＋</span>
   </summary>
   <div class="dyn-content" markdown="1">
 
-We can check if these methods conserve $I(x,y)$ along the trajectories. 
+We can check if these methods conserve $I(x,y)$ along the trajectories. We plot $g(x_t,y_t)$ along the 100 test trajectories and for our three models, a value of 0 meaning that the constraint is respected.
 
-{% include figure.liquid path="assets/img/2027-04-30-physics-constrained/constraint_gt_node_fm.png" class="img-fluid rounded" caption="Evolution of the algebraic constraint along trajectories over time." %}
+{% include figure.liquid path="assets/img/2027-04-30-physics-constrained/constraint_gt_node_fmtraj.png" class="img-fluid rounded" caption="Evolution of the algebraic constraint along trajectories over time." %}
 
-We observe that NODE is quite good at respecting the algebraic constraint. For the flow matching tasked to generate only the final state, it is expected not to enforce it at each time step since we did not task it to, however we observe that even the last state is not efficiently constrained in that setting. <span class="todo">TODO: FM-traj blandine</span>
+As expected, all GT trajectories respect the algebraic constraint for all timesteps. We observe that NODE is quite good at respecting the algebraic constraint as well, with $g(x_t,y_t)$ overall centered around 0 and with only some trajectories drifting away. The flow matching method, although overall centered around 0 too, is more noisy and less constrained with more amplitude in the error. 
 
-We will show how to enforce this constraint along trajectories in both dynamics-landing and generative setups, and compare them to these baselines in section 3: following the plan (TODO mettre lien section pour plus d'interactivité).
-
+_NB: Here, the constraint is computed on the final sampled trajectories for the flow matching strategy, so the $x$ axis is indeed the physical time as for the other panels._
 
   </div>
 </details>
@@ -380,12 +380,18 @@ We will show how to enforce this constraint along trajectories in both dynamics-
 
 We can also check if the final constraint is respected. Starting from three classes of initial angle $\theta_0 \in \{0.3\pi, 0.8\pi, 1.5\pi\}$ with $r_0 \sim \mathrm{LogNormal}(0, 0.15^2)$, the ground truth spreads each class into $\mathcal N(\theta_0, (\alpha\sigma)^2)$ on the circle. We compare the landing-angle distributions of the three models (1-Wasserstein distance to the ground truth).
 
-{% include figure.liquid path="assets/img/2027-04-30-physics-constrained/landing_angles_models.png" class="img-fluid rounded" caption="Angle distributions at the start (dashed lines: $\theta_0$) and at landing, per class. On the learned models' panels, the ground-truth landing histogram is outlined." %}
+{% include figure.liquid path="assets/img/2027-04-30-physics-constrained/landing_angles_gt_node_fmtraj.png" class="img-fluid rounded" caption="Angle distributions at the start (dashed lines: $\theta_0$) and at landing, per angle class. On the learned models' panels, the ground-truth landing histogram is outlined." %}
 
-We observe that when no constraint is enforced during training, both dynamical learning and generative methods do not respect the landing constraint: NODE produces a distribution centered at the true mean but over-representing some angles, while flow matching generates shifted gaussians from the mean. This further motivates the usage of methods to enforce final constraint, that we will investigate lastly in section 5: landing on your feet. (TODO: mettre un lien vers la section). 
+We observe that when no constraint is enforced during training, the dynamical learning does not respect the landing constraint: NODE produces a distribution centered at the true mean but over-representing some angles. On the other hand, the generative approach almost perfectly fit the ground truth landing angles distribution. 
+
+It can be explained as the generative method is designed to transport distributions, while NODE is only tasked to learn a dynamic, with the smallest error getting amplified along a trajectort as you leave the attractor seen during training <d-cite key="list2024differentiabilityunrolledtrainingneural"></d-cite>. (je sais pas si c;est la best reference ni la bonne explication, a voir)
 
   </div>
 </details>
+
+**Conclusion** We see that both approaches are complementary. On one hand, NODE is better as preserving the constraint along trajectories as it learns the true dynamic but does not preserve the initial Gaussian distribution into the landing angles and can over-represent certain landing angles (overfitting) ? On the other hand, the flow matching model succeeds in preserving the Gaussian distribution of final states, but does not preserve the algebraic constraint as tightly as NODE. 
+
+These observations further motivate the usage of methods to enforce constraints, that we investigate in the next section. 
 
 ### Guidance strategies during trajectory generation
 <span class="todo">-> MAYA et BlANDINE
