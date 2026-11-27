@@ -289,6 +289,8 @@ We report this analysis for various state-of-the-art methods in the following ta
 
 ## Our playground: the spiral landing system and its constraints
 
+We choose a simple 2D system with both type of constraints in order to easily visualize and understand the impact of the methods on the predicted trajectories.
+
 ### An ODE that spirals onto the circle
 
 The equation: for $z = (z_1, z_2) \in \mathbb{R}^2$ (here the state is $x = z$, with $d = 2$):
@@ -331,10 +333,11 @@ With three classes of initial angle $\theta_0 \in \{0.3\pi, 0.8\pi, 1.5\pi\}$ an
 
 {% include figure.liquid path="assets/img/2027-04-30-physics-constrained/landing_angles_gt.png" class="img-fluid rounded" caption="Final states: landing points on the unit circle (left) and their angle distribution per class (right)." %}
 
-## Simulating the spiral landing system
+## Simulating the spiral landing system under constraints
+
+It's finally time to test dynamics-learning and generative approaches in the simulation of the spiral landing system ! We first inspect baseline approaches without any constraints before testing their constrained counterparts. 
 
 ### Without constraints
-
 --> EMMA
 **Same start, three trajectories.** All models start from the same Gaussian initial points $z_0 \sim \mathcal N(0, I)$.
 We compare a Neural ODE that learns the $f_\theta$ and a flow matching model that learns the transport between starting point and final state distirbution.
@@ -398,15 +401,19 @@ These observations further motivate the usage of methods to enforce constraints,
 GT, NODE, SNODE
 FM traj, FM traj + constraint guidance</span>
 
+In this section, we want to enforce $g(x_t,y_t)=0$ for every timestep of the predicted trajectory. Since projecting can become very costly in realistic settings, we rather focus on methods that "guide" the trajectory towards the constraint manifold $\mathcal{C}$: <span class="c-dyn">SNODE</span> and <span class="c-gen">Primal Dual Constrained Sampling</span>.
 
-In this section, we will try to enforce $g(x_t,y_t)=0$ for every timestep of the predicted trajectory. 
+peut etre le mettre en toggle ici en mode rappel
+<div class="fam fam-dyn" markdown="1">
 
-#### SNODE
-The idea of SNODE is to directly modify the Neural ODE with a term that “nudges” back the trajectory to the manifold of algebraic constraint $\mathcal{M}=\{u, g(u)=0\}$: 
+<strong><span class="c-dyn">Reminder </span></strong> The idea of <span class="c-dyn">SNODE</span> is to directly modify the Neural ODE with a term that “nudges” back the trajectory to the manifold of algebraic constraint $$\mathcal{C}=\{x, g(x)=0\}$$: 
 $$
-\dot{\hat z} = f_\theta(\hat z) - \gamma S(\hat z )g(\hat z)
+\dot{\hat x} = f_\theta(\hat x) - \gamma S(\hat x )g(\hat x).
 $$
-They prove that the manifold $\mathcal{M}$ is asymptotically Lyapunov-stable in the SNODE under certain constraints for the stabilization matrix $S$, which they choose to be the Moore-Penrose pseudoinverse of the Jacobian of $g$ at $\hat z$, $G^+=J_g^T(J_g J_g^T)^{-1}$, with $J_g$ the Jacobian matrix of $g$. 
+
+The manifold $\mathcal{C}$ is asymptotically Lyapunov-stable in the SNODE under certain constraints for the stabilization matrix $S$, which they choose to be the Moore-Penrose pseudoinverse of the Jacobian of $g$ at $\hat x$, $G^+=J_g^T(J_g J_g^T)^{-1}$, with $J_g$ the Jacobian matrix of $g$. 
+
+</div>
 
 
 <details>
