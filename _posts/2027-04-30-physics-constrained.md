@@ -346,7 +346,7 @@ We first simulate our system without any constraint, using NODE for the dynamics
 
 We can now visualize the simulation time distinction between the two methods: the ground truth (GT) and neural ODE trajectories advance the 2D state in the physical time (left and middle panels), while the trajectory flow matching (FM) iteratively refine a trajectory in the sample time (right panel).
 
-Qualitatively and quantitatively, the NODE trajectories are accurately reproducing the true ones (MSE on the test set: $1.63e-2$). <span class="todo">FM-traj ??</span> 
+Qualitatively and quantitatively, the NODE trajectories are accurately reproducing the true ones  with a Mean Squared Error (MSE) on the test set of $1.31e-2$, while the flow matching ones are a bit noisier with a MSE on the test set of $4.92e-2$. 
 
 **But do these methods also respect the different constraints we defined ?** 
 
@@ -383,7 +383,7 @@ We can also check if the final constraint is respected. Starting from three clas
 
 We observe that when no constraint is enforced during training, the dynamical learning does not respect the landing constraint: NODE produces a distribution centered at the true mean but over-representing some angles. On the other hand, the generative approach almost perfectly fit the ground truth landing angles distribution. 
 
-It can be explained as the generative method is designed to transport distributions, while NODE is only tasked to learn a dynamic, with the smallest error getting amplified along a trajectort as you leave the attractor seen during training <d-cite key="list2024differentiabilityunrolledtrainingneural"></d-cite>. (je sais pas si c;est la best reference ni la bonne explication, a voir)
+It can be explained as the generative method is designed to transport distributions, while NODE is only tasked to learn a dynamic, with the smallest error getting amplified along a trajectory as you leave the attractor seen during training <d-cite key="list2024differentiabilityunrolledtrainingneural"></d-cite>. (je sais pas si c;est la best reference ni la bonne explication, a voir, ou alors overfitting ?)
 
   </div>
 </details>
@@ -411,15 +411,29 @@ The manifold $\mathcal{C}$ is asymptotically Lyapunov-stable in the SNODE under 
 
 </div>
 
-
 <details>
 <summary><strong>A little training challenge</strong></summary>
 
-The constraint has discontinuities due to `arctan`, so we have to use `torch.remainder` to ensure it is zero modulo \(2\pi\). (DVP more + figure): this is what we use during training.
-
+The constraint has discontinuities due to the domain of definition of `arctan`, so we have to use `torch.remainder` to ensure it is zero modulo \(2\pi\): this is what we use during training. 
+<br>
+<br>
 For testing, a more rigorous metric can be defined: we compute an unwrapped angle that is continuous and avoids the jumps due to `arctan`.
-
+<br>
+<br>
 We train several models with \(\gamma \in \{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 2.0\}\) and choose the model with the best final training loss: \(\gamma_{\mathrm{opt}}=0.4\).
+
+</details>
+
+
+<div class="fam fam-gen" markdown="1">
+<strong><span class="c-gen">Reminder </span></strong> The idea of <span class="c-gen">Primal Dual</span>
+</div>
+
+<details>
+<summary><strong>When should we apply the projection during generative sampling?</strong></summary>
+
+- Closed form: when we have a closed form, it is more straightforward to apply it at the end.
+- Gradient guidance: <span class="todo">TODO</span>
 
 </details>
 
@@ -471,10 +485,6 @@ We observe that the model with the constraint is now very good at transporting t
   </div>
 </details>
 
-**Remark: when should we apply the projection during generative sampling?**
-
-- **Closed form:** when we have a closed form, it is more straightforward to apply it at the end.
-- **Gradient guidance:** <span class="todo">TODO</span>
 
 
 
