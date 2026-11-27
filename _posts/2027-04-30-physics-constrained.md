@@ -269,11 +269,11 @@ We report this analysis for various state-of-the-art methods in the following ta
 
 <div class="table-responsive" markdown="1">
 
-| Method | Loop index $$k$$ | $$f_\theta$$ learns | Correction $$\mathcal{P}_{k}$$ | Constraint enforced on |
+| Method | Loop index $$k$$ | $$f_\theta$$ learns | Correction $$\mathcal{P}_{k}$$ | Constraint enforced |
 |---|---|---|---|---|
 | <span class="dyn"></span>Neural ODE (baseline) | Physical time | Vector field $$f$$ | None | – |
-| <span class="dyn"></span>Stabilized NODE (SNODE) <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> | Physical time | Vector field $$f$$ | SNDE: $$f_\theta-\gamma G(x)^+g(x)$$, where $$G^+$$ is the Moore-Penrose pseudoinverse of the Jacobian of $$g$$. | Every $$x_n$$; $$\mathcal{C}$$ is asymptotically stable. |
-| <span class="dyn"></span>Projected NODE (PNODE) <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite> | Physical time | Vector field $$f$$ | Projection onto $$\mathcal{C}$$ using Newton's method with a fixed Jacobian. SNODE is a special case of PNODE with a single step. | Every $$x_n$$; full projection onto $$\mathcal{C}$$ at each step. |
+| <span class="dyn"></span> SNODE <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> | Physical time | Vector field $$f$$ | $$\mathcal{P}_k(x)=x-\gamma h_k G^{+}(x)g(x)$$ | $$\mathcal{C}$$ is asymptotically stable. |
+| <span class="dyn"></span>PNODE <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite> | Physical time | Vector field $$f$$ | $$\mathcal{P}_k= \mathcal{P}_{\mathcal{C}}$$, projection onto $$\mathcal{C}$$ using Newton's method with a fixed Jacobian.| Full projection onto $$\mathcal{C}$$ at each step. |
 | <span class="gen"></span>GenCast <d-cite key="price2024gencastdiffusionbasedensembleforecasting"></d-cite>, Autoregressive conditional diffusion <d-cite key="kohl2024benchmarkingautoregressiveconditionaldiffusion"></d-cite> | Physical time + inner sampling loop | Conditional score of $$p(x_{t+\Delta_t}\mid x_t)$$ | None | – |
 | <span class="gen"></span>Constrained Sampling (primal-dual) <d-cite key="chamon2025constrainedsamplingprimalduallangevin"></d-cite> | Sampling time | Full trajectory distribution | Langevin sampling step with penalty $$\lambda^\top g$$, solved using a primal-dual formulation. | Generated distribution satisfies the constraint in expectation, $$\mathbb{E}[g(x)]=0$$. |
 | <span class="gen"></span>Constrained Sampling (split) <d-cite key="blanke2026strictlyconstrainedgenerativemodeling"></d-cite> | Sampling time | Score | Variable splitting: alternates a sampling step and a projection onto $$\mathcal{C}$$. | Final sample (exact constraint?) |
@@ -286,7 +286,7 @@ We report this analysis for various state-of-the-art methods in the following ta
 </details>
 
 
- In the blog, we pick a representant of each family : <span class="c-dyn">SNODE</span> and <span class="c-gen">Primal Dual Constrained Sampling</span>. We will test both on a 2D ODE whose trajectories spiral onto the unit circle. Let's discover our playground in the next section...
+ In the blog, we investigate a representant of each family : <span class="c-dyn">SNODE</span> and <span class="c-gen">Primal Dual Constrained Sampling</span>. We will test both on a 2D ODE whose trajectories spiral onto the unit circle. Let's discover our playground in the next section...
 
 ## Our playground: the spiral landing system and its constraints
 
