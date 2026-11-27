@@ -2,7 +2,7 @@
 layout: distill
 title: Learning dynamics under physical constraints
 # TODO Emma : écrire un résumé de 2-3 phrases (sans maths ni liens)
-description: We compare methods that learn the dynamics of a physical system with generative methods, and study how physical constraints affect the trajectories they generate, on a 2D ODE whose trajectories spiral onto the unit circle.
+description: When it comes to enforcing constraints on trajectories, methods that learn the dynamics of a physical system and generative methods have more in common than you could think. This blog highlights their similarities in terms of algorithms and study how physical constraints affect the trajectories they generate, on a 2D ODE whose trajectories spiral onto the unit circle.
 date: 2027-04-30
 future: true
 htmlwidgets: true
@@ -125,7 +125,9 @@ _styles: |
 <span class="todo">DISCLAIMER: toutes les métriques temporelles sont calculées sur $t_{gif}$ qu'il va falloir unifier entre SNODE/FM pour Blandine et pour pouvoir dire des choses sur nos méthodes</span>
 
 ## Enforcing physical constraints, a task shared between two communities
-In the world of physics modelisation, data-driven approaches represent cheap alternatives to classical numerical modelling, ranging from **Neural Ordinary Differential Equations (NODE)**, that learn the dynamics from trajectory points, to **generative methods**, that simulate trajectories based on a learned distribution of states.<d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> (TODO: mettre citations je sais pas comment) As many physical systems present continuous constraints called **algebraic constraints** ,i.e., that is respected continuously along any trajectory (for example conservation laws) or **final constraints** that should be respected at the end of the simulation (for control purposes), many methods have been developped to enforce these constraints on the learnt dynamics or distributions, in the hope of stabilizing or improving the model's simulations.
+In the world of physics modelisation, data-driven approaches represent cheap alternatives to classical numerical modelling, ranging from **Neural Ordinary Differential Equations (NODE)**<d-cite key="chen2026neuralordinarydifferentialequations"></d-cite>, that learn the dynamics from trajectory points, to **generative methods**, that simulate trajectories based on a learned distribution of states.
+
+As many physical systems present continuous constraints called **algebraic constraints** ,i.e., that is respected continuously along any trajectory (for example conservation laws) or **final constraints** that should be respected at the end of the simulation (for control purposes), many methods have been developped to enforce these constraints on the learnt dynamics <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite> or distributions <d-cite key="chamon2025constrainedsamplingprimalduallangevin"></d-cite> <d-cite key="blanke2026strictlyconstrainedgenerativemodeling"></d-cite> <d-cite key="chung2024diffusionposteriorsamplinggeneral"></d-cite>, in the hope of stabilizing or improving the model's simulations .
 
 Although dynamics-learning and generative methods to enforce physical constraints appear different at first, they do not fundamentally differ and can be understood under a common **prediction-correction** framework that we will present here. 
 
@@ -158,7 +160,7 @@ and we call $$\mathcal{C} = \{x \in \mathbb{R}^d : g(x) = 0\}$$ the constraint s
 
 <div class="fam fam-dyn" markdown="1">
 
-**Dynamics-learning methods** learn the vector field, $f_\theta \approx f$, and integrate it in time with the same solver (such as NODEs): $\hat x(t + \Delta t) = S\big(\hat x(t), f_\theta, \Delta t\big)$.
+**Dynamics-learning methods** learn the vector field, $f_\theta \approx f$, and integrate it in time with the same solver, such as NODEs <d-cite key="chen2026neuralordinarydifferentialequations"></d-cite>: $\hat x(t + \Delta t) = S\big(\hat x(t), f_\theta, \Delta t\big)$.
 </div>
 
 <div class="fam fam-gen" markdown="1">
@@ -169,13 +171,13 @@ $f_\theta$ is then a velocity field (flow matching) or a score $\nabla \log p_{\
 
 
 ### ... enforcing physical constraints under a common framework
-By separating trajectory simulation into a prediction or **learned forward step** and a **correction/projection step**, constrained integration of the learned dynamics and constrained sampling from a generative model can both be understood under a common framework, that we describe in the algorithm below. 
+Let's consider the task for learning how to simulate trajectories of an ODE under some algebraic constraint. By separating trajectory simulation into a prediction or **learned forward step** and a **correction/projection step**, constrained integration of the learned dynamics and constrained sampling from a generative model can both be understood under a common framework, that we describe in the algorithm below. 
 
 <div class="algo" markdown="1">
 
 **Algorithm: learned step + correction**
 
-**Input:** network $f_\theta$, correction operator $\mathcal{P}_{k}$, step sizes $h_k$, initial distribution $p_0$. 
+**Inputs:** A neural network $f_\theta$, a correction operator $\mathcal{P}_{k}$, step sizes $h_k$, and the initial distribution $p_0$. 
 
 1. Sample $x^0 \sim p_0$.
 2. For $k = 0, \dots, K-1$:
@@ -186,11 +188,13 @@ By separating trajectory simulation into a prediction or **learned forward step*
 <p class="algo-note"><em>Note:</em> the correction operator \(\mathcal{P}_k\) can be hand-designed (e.g. an exact projection onto \(\mathcal{C}\) or a gradient of the constraint) or learned by a neural network \(\mathcal{P}_{\psi,k}\) with parameters \(\psi\).</p>
 </div>
 
+To better understand how this algorithm operates for constrained dynamics-learning and constrained sampling, we detail the inputs for each family below, with one major difference: the simulated time that is either a <span class="c-dyn">physical time</span> or a <span class="c-gen"> sampling time </span>. 
+
 <div class="fam-grid">
 
 <div class="fam fam-dyn">
   <p class="fam-title">Constrained dynamics-learning </p>
-  <p><strong>\(k\) = physical time</strong>: \(x^k = x_k\), \(h_k = \Delta t\) is the solver time step. Every iterate is a physical state, so the constraint is enforced <em>along the trajectory</em>.</p>
+  <p><strong>\(k\) indexes the physical time</strong>, meaning: \(x^k = x_{k \Delta t}\) with \(h_k = \Delta t\) is the solver time step. Every iterate is a physical state, so the constraint is enforced <em>along the trajectory</em>.</p>
   <ul class="fam-defs">
     <li>\(d\): state dimension</li>
     <li>\(f_\theta : \mathbb{R}^d \to \mathbb{R}^d,\; x \mapsto f_\theta(x)\)</li>
@@ -207,8 +211,8 @@ By separating trajectory simulation into a prediction or **learned forward step*
 </div>
 
 <div class="fam fam-gen">
-  <p class="fam-title"> Constrained generative</p>
-  <p><strong>\(k\) = sampling time</strong>: \(h_k\) is the sampling time step, from noise \(X^0\) to a sample \(X^K\). Intermediate states are not physical, so only the <em>final sample</em> must satisfy the constraint.</p>
+  <p class="fam-title"> Constrained generative sampling</p>
+  <p><strong>\(k\) indexes the sampling time</strong>, meaning: \(h_k\) is the sampling time step, from noise \(X^0\) to a sample trajectory \(X^K\). Intermediate states are not physical, so only the <em>final sample</em> must satisfy the constraint.</p>
   <ul class="fam-defs">
     <li>\(X = [x_1, \dots, x_N] \in \mathbb{R}^{d \times N}\): a whole trajectory</li>
     <li>\(f_\theta : \mathbb{R}^{d\times N} \to \mathbb{R}^{d\times N},\; X \mapsto f_\theta(X)\)</li>
@@ -225,31 +229,29 @@ By separating trajectory simulation into a prediction or **learned forward step*
 </div>
 
 
-
 </div>
 
+We now have a general view of how both families can enforce physical constraints when simulating trajectories. In particular, both rely on a correction operator $$\mathcal{P}_k$$ that it is applied many times to enforce the constraint. There are actually various ways to apply it, depending on a schedule indexed by $$k$$. By specifying this schedule of $P_{k}$, we retrieve existing methods in the litterature:  
 
-  If we specify the schedule of $P_{k}$, we retreive existing methods 
   <div class="pk-grid">
     <div>
       <p class="pk-title c-dyn"><span class="c-dyn">Dynamics-learning</span></p>
       <ul>
-        <li>\(\mathcal{P}_k = \mathcal{P}_{\text{closed form}}\), the exact projection onto \(\mathcal{C}\), if a closed form exists. <em>(PNODE)</em></li>
-        <li>\(\mathcal{P}_k(\tilde x) = \tilde x - \alpha_k \nabla g(\tilde x)\), a gradient step towards \(\mathcal{C}\). <em>(SNODE)</em></li>
+        <li><strong>Projected NODE (PNODE)</strong> <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite>: \(\mathcal{P}_k = \mathcal{P}_{\mathcal{C}} \, \forall k \leq K \), the exact projection onto \(\mathcal{C}\) (closed form or solved iteratively). </li>
+        <li><strong>Stabilized NODE (SNODE)</strong> <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite>: the correction operator directly modifies \(f_\theta\) into \(f_\theta - \gamma G^{+}g\)where $G^+$ is the Moore-Penrose pseudoinverse of the Jacobian of $g$. When the solver is Euler, it translates into the schedule \(\mathcal{P}_k(\tilde x) = \tilde x - \gamma h_k G^{+}(\tilde x)g(\tilde x)\). As described in <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite>, it corresponds to a single step of the full projection \(\mathcal{P}_\mathcal{C}\). </li>
       </ul>
     </div>
     <div>
       <p class="pk-title c-gen"><span class="c-gen"> Generative methods </span></p>
       <ul>
-        <li>\(\mathcal{P}_k = \mathrm{Id}\) for \(k &lt; K\): no correction on the intermediate noisy states.</li>
-        <li>\(\mathcal{P}_k(\tilde x) = \tilde x - \alpha_k \nabla g(\tilde x)\), a gradient step towards \(\mathcal{C}\).</li>
+        <li><strong>Final state projection (TODO mettre refs):</strong> \(\mathcal{P}_k = \mathrm{Id}\) for \(k &lt; K\), and \(\mathcal{P}_K=\mathcal{P}_{\mathcal{C}}\), i.e., no correction on the intermediate noisy states, only on the final state.</li>
+        <li> <strong> Primal Dual Constrained Sampling</strong> <d-cite key="chamon2025constrainedsamplingprimalduallangevin"></d-cite> : similarly to SNODE, the projection is guided via a gradient step towards \(\mathcal{C}\), i.e., \(\mathcal{P}_k(\tilde x) = \tilde x - \alpha_k \nabla g(\tilde x)\).</li>
       </ul>
     </div>
   </div>
 
-    
-
-
+<br>
+More methods can be classified into this prediction-correction framework. If you are curious, we detail some state-of-the-art (SOTA) approches in the following table.
 
 <details class="dyn-toggle">
   <summary>
@@ -260,17 +262,17 @@ By separating trajectory simulation into a prediction or **learned forward step*
 
   <div class="dyn-content" markdown="1">
 
-<span class="todo">TODO écrire les cellules DPS, daisy, daps, et thermalizer et refiner ? (mais y a plus de contrainte physique ça va embrouiller je pense). Vérifier ce que j'ai écrit pour constrained sampling, j'ai lu les papiers à moitié.</span>
+<span class="todo">TODO écrire les cellules DPS, daps. inclure precisement la correction. Vérifier ce que j'ai écrit pour constrained sampling, j'ai lu les papiers à moitié.</span>
 
 We report this analysis for various state-of-the-art methods in the following table. This taxonomy is non exhaustive, but gives examples for both families.
 
 <div class="table-responsive" markdown="1">
 
-| Method | Loop index $$k$$ | $$f_\theta$$ learns | Correction $$\mathcal{P}_{k}$$ | Constraint enforced on |
+| Method | Loop index $$k$$ | $$f_\theta$$ learns | Correction $$\mathcal{P}_{k}$$ | Constraint enforced |
 |---|---|---|---|---|
 | <span class="dyn"></span>Neural ODE (baseline) | Physical time | Vector field $$f$$ | None | – |
-| <span class="dyn"></span>Stabilized NODE (SNODE) <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> | Physical time | Vector field $$f$$ | SNDE: $$f_\theta-\gamma G(x)^+g(x)$$, where $$G^+$$ is the Moore-Penrose pseudoinverse of the Jacobian of $$g$$. | Every $$x_n$$; $$\mathcal{C}$$ is asymptotically stable. |
-| <span class="dyn"></span>Projected NODE (PNODE) <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite> | Physical time | Vector field $$f$$ | Projection onto $$\mathcal{C}$$ using Newton's method with a fixed Jacobian. SNODE is a special case of PNODE with a single step. | Every $$x_n$$; full projection onto $$\mathcal{C}$$ at each step. |
+| <span class="dyn"></span> SNODE <d-cite key="white2024stabilizedneuraldifferentialequations"></d-cite> | Physical time | Vector field $$f$$ | $$\mathcal{P}_k(x)=x-\gamma h_k G^{+}(x)g(x)$$ | $$\mathcal{C}$$ is asymptotically stable. |
+| <span class="dyn"></span>PNODE <d-cite key="pal2025semiexplicitneuraldaeslearning"></d-cite> | Physical time | Vector field $$f$$ | $$\mathcal{P}_k= \mathcal{P}_{\mathcal{C}}$$, projection onto $$\mathcal{C}$$ using Newton's method with a fixed Jacobian.| Full projection onto $$\mathcal{C}$$ at each step. |
 | <span class="gen"></span>GenCast <d-cite key="price2024gencastdiffusionbasedensembleforecasting"></d-cite>, Autoregressive conditional diffusion <d-cite key="kohl2024benchmarkingautoregressiveconditionaldiffusion"></d-cite> | Physical time + inner sampling loop | Conditional score of $$p(x_{t+\Delta_t}\mid x_t)$$ | None | – |
 | <span class="gen"></span>Constrained Sampling (primal-dual) <d-cite key="chamon2025constrainedsamplingprimalduallangevin"></d-cite> | Sampling time | Full trajectory distribution | Langevin sampling step with penalty $$\lambda^\top g$$, solved using a primal-dual formulation. | Generated distribution satisfies the constraint in expectation, $$\mathbb{E}[g(x)]=0$$. |
 | <span class="gen"></span>Constrained Sampling (split) <d-cite key="blanke2026strictlyconstrainedgenerativemodeling"></d-cite> | Sampling time | Score | Variable splitting: alternates a sampling step and a projection onto $$\mathcal{C}$$. | Final sample (exact constraint?) |
@@ -283,15 +285,7 @@ We report this analysis for various state-of-the-art methods in the following ta
 </details>
 
 
-
- In the blog, we pick a representant of each family : SNODE and Primal dual constrained sampling. We will test both on a 2D ODE whose trajectories spiral onto the unit circle.
- 
-  We analyse the conservation of those following constraints :
-  <ul>
-    <li> a quantity <strong>conserved along every trajectory</strong> </li>
-    <li>a distribution of <strong>final states on the unit circle</strong> </li>
-  </ul>
-  by tracking the residual $\lVert g(x^k) \rVert$ to measure how well each constraint is respected.
+ In the rest of this blog, we investigate a representant of each family: <span class="c-dyn">SNODE</span> and <span class="c-gen">Primal Dual Constrained Sampling</span>. We will test both on a 2D ODE whose trajectories spiral onto the unit circle. Let's discover our playground in the next section...
 
 ## Our playground: the spiral landing system and its constraints
 
@@ -490,3 +484,5 @@ In the end, integrating dynamics and sampling processes boils down to integratin
 Our blog provides a framework to make a parallel between them.
 
 Differences remain, depending on whether you need to generate distributions of trajectories, or need flexibility of the timestep of the trajectories. One may be better suited than the other.
+
+Next: PDE-Refiner and Thermalizer ?
