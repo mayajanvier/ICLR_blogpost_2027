@@ -26,9 +26,9 @@ toc:
       - name: The two constraints
   - name: Simulating the spiral landing system
     subsections:
-      - name: NODE vs flow matching (no constraints)
-      - name: "Landing on your feet: enforcing the final constraint"
-      - name: "Following the plan: generating the right trajectories"
+      - name: Without constraints
+      - name: Guidance strategies during trajectory generation
+  - name: Conclusion
 
 _styles: |
   /* TODO markers (remove before submission) */
@@ -331,7 +331,7 @@ With three classes of initial angle $\theta_0 \in \{0.3\pi, 0.8\pi, 1.5\pi\}$ an
 
 {% include figure.liquid path="assets/img/2027-04-30-physics-constrained/landing_angles_gt.png" class="img-fluid rounded" caption="Final states: landing points on the unit circle (left) and their angle distribution per class (right)." %}
 
-## Simulating the spiral landing system under constraints
+## Simulating the spiral landing system
 
 It's finally time to test dynamics-learning and generative approaches in the simulation of the spiral landing system ! We first inspect baseline approaches without any constraints before testing their constrained counterparts. 
 
