@@ -250,9 +250,8 @@ We now have a general view of how both families can enforce physical constraints
     </div>
   </div>
 
-    
-
-
+<br>
+More methods can be classified into this prediction-correction framework. If you are curious, we detail some state-of-the-art (SOTA) approches in the following table.
 
 <details class="dyn-toggle">
   <summary>
@@ -286,7 +285,7 @@ We report this analysis for various state-of-the-art methods in the following ta
 </details>
 
 
- In the blog, we investigate a representant of each family : <span class="c-dyn">SNODE</span> and <span class="c-gen">Primal Dual Constrained Sampling</span>. We will test both on a 2D ODE whose trajectories spiral onto the unit circle. Let's discover our playground in the next section...
+ In the rest of this blog, we investigate a representant of each family : <span class="c-dyn">SNODE</span> and <span class="c-gen">Primal Dual Constrained Sampling</span>. We will test both on a 2D ODE whose trajectories spiral onto the unit circle. Let's discover our playground in the next section...
 
 ## Our playground: the spiral landing system and its constraints
 
